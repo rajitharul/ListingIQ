@@ -1,30 +1,22 @@
 """
 Competitor Analysis Agent
-Retrieves and contextualizes the top 3 market competitors.
+Discovers and contextualizes the top 3 market competitors using LLM intelligence.
+Fully agentic — no hardcoded seed data.
 """
 import json
 import logging
 import time
 from config import OPENAI_MODEL
 from models.schemas import BrandInput, Competitor, CompetitorAnalysisResult
-from data.seed_competitors import get_competitors
-from agents.llm_client import get_openai_client, logged_chat_completion
+from agents.llm_client import logged_chat_completion
 
 log = logging.getLogger("sitescore.agent.competitors")
 
 
 async def analyze_competitors(brand_input: BrandInput) -> CompetitorAnalysisResult:
-    """Return competitor analysis -- uses seed data enriched by LLM market summary."""
+    """Discover competitors via LLM and generate a strategic market summary."""
 
-    seed = get_competitors(brand_input.brand_name, brand_input.product_category)
-
-    if seed:
-        competitors = [Competitor(**c) for c in seed]
-    else:
-        # Fallback: ask the LLM to generate plausible competitors
-        competitors = await _llm_generate_competitors(brand_input)
-
-    # Generate a strategic market summary via LLM
+    competitors = await _discover_competitors(brand_input)
     market_summary = await _generate_market_summary(brand_input, competitors)
 
     return CompetitorAnalysisResult(
@@ -44,21 +36,25 @@ async def competitor_analysis_node(state: dict) -> dict:
     return {"competitor_result": result}
 
 
-async def _llm_generate_competitors(brand_input: BrandInput) -> list[Competitor]:
-    prompt = f"""You are a marketing competitive intelligence analyst.
-Given the following brand and product, identify the top 3 direct market competitors.
+async def _discover_competitors(brand_input: BrandInput) -> list[Competitor]:
+    """Use GPT-4o to identify the top 3 direct market competitors."""
+    prompt = f"""You are a marketing competitive intelligence analyst with deep knowledge of global brands and market dynamics.
+
+Given the following brand and product category, identify the top 3 REAL direct market competitors. Use your knowledge of actual brands, their real taglines, real products, and real market positions.
 
 Brand: {brand_input.brand_name}
 Category: {brand_input.product_category}
-Current Tagline: {brand_input.current_tagline}
-Target Audience: {brand_input.target_audience}
+Current Tagline: "{brand_input.current_tagline}"
+Target Audience: {brand_input.target_audience or "General consumer"}
 
 Return a JSON object with a "competitors" key containing an array of exactly 3 objects, each having:
-- name: competitor brand name
-- product: specific product name
-- tagline: their current marketing tagline
-- description: 2-sentence product description
-- market_position: one sentence on their market standing
+- name: the real competitor brand name
+- product: their specific flagship product in this category
+- tagline: their actual current marketing tagline (must be real, not invented)
+- description: 2-sentence product description with real details
+- market_position: one sentence on their actual market standing (include real metrics like market share, revenue, or store count where possible)
+
+IMPORTANT: Use REAL brands with REAL taglines and REAL market data. Do not invent fictional competitors.
 
 Return ONLY valid JSON, no markdown."""
 
@@ -67,7 +63,7 @@ Return ONLY valid JSON, no markdown."""
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
         response_format={"type": "json_object"},
-        caller="competitors.generate",
+        caller="competitors.discover",
     )
     data = json.loads(response.choices[0].message.content)
     items = data if isinstance(data, list) else data.get("competitors", [])

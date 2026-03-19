@@ -36,7 +36,7 @@ from models.schemas import (
 )
 from agents.orchestrator import run_full_pipeline, get_compiled_graph
 from agents.competitor_analysis import analyze_competitors
-from agents.evaluation_dimensions import get_dimensions
+from agents.evaluation_dimensions import get_dimensions, generate_dimensions
 from agents.benchmark_generation import generate_benchmark
 from agents.evaluator_scoring import evaluate_all
 from agents.content_improvement import suggest_improvements
@@ -175,7 +175,16 @@ async def get_competitors(brand_input: BrandInput):
 @app.post("/api/evaluate")
 async def evaluate(request: FullPipelineRequest):
     """Run competitor analysis + evaluation in one call."""
-    dimensions = get_dimensions(request.custom_dimensions)
+    dimensions = await generate_dimensions(
+        request.brand_input.brand_name,
+        request.brand_input.product_category,
+        request.brand_input.target_audience,
+    )
+    if request.custom_dimensions:
+        dim_map = {d.name: d for d in dimensions}
+        for cd in request.custom_dimensions:
+            dim_map[cd.name] = cd
+        dimensions = list(dim_map.values())
     competitor_result = await analyze_competitors(request.brand_input)
     bench = await generate_benchmark(
         request.brand_input, competitor_result.competitors, dimensions
