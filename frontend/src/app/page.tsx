@@ -8,6 +8,9 @@ import ScoreMatrix from "@/components/ScoreMatrix";
 import RadarChartComponent from "@/components/RadarChart";
 import ImprovementPanel from "@/components/ImprovementPanel";
 import FeedbackPanel from "@/components/FeedbackPanel";
+import TrendPanel from "@/components/TrendPanel";
+import DeepInsightsPanel from "@/components/DeepInsightsPanel";
+import TrendProjectionPanel from "@/components/TrendProjectionPanel";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { runPipeline, runPipelineStream } from "@/lib/api";
 import type {
@@ -96,8 +99,8 @@ export default function Home() {
                 Quantified
               </h1>
               <p className="text-lg text-[var(--text-muted)] max-w-2xl mx-auto">
-                Benchmark your marketing copy against real competitors using a
-                6-agent AI pipeline. Get numerical scores, targeted
+                Benchmark your marketing copy against real competitors using an
+                8-agent AI pipeline. Get numerical scores, targeted
                 improvements, and adaptive learning.
               </p>
             </div>
@@ -163,6 +166,11 @@ export default function Home() {
                 scores={result.evaluation.competitor_scores}
               />
 
+              {/* Trend & Sentiment panel */}
+              {result.trend_data && (
+                <TrendPanel trendData={result.trend_data} />
+              )}
+
               {/* Score matrix + Radar side by side */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
@@ -187,6 +195,12 @@ export default function Home() {
                 />
               </div>
 
+              {/* Deep Insights (branch agents — deep mode only) */}
+              <DeepInsightsPanel result={result} />
+
+              {/* Trend Projection (deep mode with history) */}
+              <TrendProjectionPanel result={result} />
+
               {/* Feedback & Memory */}
               <FeedbackPanel
                 brandInput={brandInput}
@@ -200,7 +214,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-[var(--card-border)] py-6 text-center">
         <p className="text-xs text-[var(--text-muted)]">
-          Sitescore v1.0 — Multi-Agent Benchmarking Engine | Powered by GPT-4o
+          Sitescore v2.0 — Multi-Agent Benchmarking Engine | Powered by GPT-4o
         </p>
       </footer>
     </div>

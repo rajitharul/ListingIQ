@@ -94,10 +94,32 @@ class MemoryEntry(BaseModel):
     confidence: float = 1.0
 
 
+class CompetitorTrend(BaseModel):
+    competitor_name: str
+    search_interest: float = Field(0.0, description="Relative Google Trends interest (0-100)")
+    trend_direction: str = Field("stable", description="rising | declining | stable")
+    recent_headlines: list[str] = []
+    sentiment_score: float = Field(0.0, ge=-1.0, le=1.0, description="-1 negative to +1 positive")
+
+
+class TrendAnalysisResult(BaseModel):
+    brand_trend: CompetitorTrend
+    competitor_trends: list[CompetitorTrend]
+    market_momentum: str = Field("", description="Overall market direction summary")
+    opportunities: list[str] = []
+    threats: list[str] = []
+
+
+class DepthConfig(BaseModel):
+    enable_trends: bool = Field(True, description="Run Trend & Sentiment branch")
+    depth_level: str = Field("standard", description="quick | standard | deep")
+
+
 class FullPipelineRequest(BaseModel):
     brand_input: BrandInput
     custom_dimensions: list[Dimension] | None = None
     session_id: str = "default"
+    depth_config: DepthConfig | None = None
 
 
 class FullPipelineResponse(BaseModel):
@@ -105,3 +127,14 @@ class FullPipelineResponse(BaseModel):
     evaluation: EvaluationResult
     suggestions: list[ImprovementSuggestion]
     memory_context: list[MemoryEntry]
+    trend_data: TrendAnalysisResult | None = None
+    # Branch agent outputs (all optional — only present in deep mode)
+    brand_voice_data: dict | None = None
+    audience_resonance_data: dict | None = None
+    creative_variants_data: dict | None = None
+    linguistic_data: dict | None = None
+    gap_analysis_data: dict | None = None
+    positioning_data: dict | None = None
+    ab_test_data: dict | None = None
+    roadmap_data: dict | None = None
+    trend_projection_data: dict | None = None

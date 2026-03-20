@@ -4,6 +4,7 @@ import type {
   ImprovementSuggestion,
   FeedbackEntry,
   EvaluationResult,
+  DepthConfig,
 } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -21,13 +22,15 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export async function runPipeline(
-  brandInput: BrandInput
+  brandInput: BrandInput,
+  depthConfig?: DepthConfig
 ): Promise<FullPipelineResponse> {
   return apiFetch<FullPipelineResponse>("/api/pipeline", {
     method: "POST",
     body: JSON.stringify({
       brand_input: brandInput,
       session_id: `session_${Date.now()}`,
+      depth_config: depthConfig ?? { enable_trends: true, depth_level: "standard" },
     }),
   });
 }
@@ -72,12 +75,14 @@ export async function addGuideline(
  */
 export function runPipelineStream(
   brandInput: BrandInput,
-  onNodeComplete: (node: string) => void
+  onNodeComplete: (node: string) => void,
+  depthConfig?: DepthConfig
 ): Promise<FullPipelineResponse> {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
       brand_input: brandInput,
       session_id: `session_${Date.now()}`,
+      depth_config: depthConfig ?? { enable_trends: true, depth_level: "standard" },
     });
 
     fetch(`${API_BASE}/api/pipeline/stream`, {
@@ -116,7 +121,12 @@ export function runPipelineStream(
               if (line.startsWith("data: ")) data += line.slice(6);
             }
 
-            if (eventType === "node_complete" && data) {
+            if (eventType === "depth_assigned" && data) {
+              // Depth controller assigned analysis depth — informational only
+              try {
+                onNodeComplete("depth_controller");
+              } catch {}
+            } else if (eventType === "node_complete" && data) {
               try {
                 const payload = JSON.parse(data);
                 onNodeComplete(payload.node);

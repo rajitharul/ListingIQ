@@ -33,6 +33,7 @@ from models.schemas import (
     ImprovementSuggestion,
     FeedbackEntry,
     MemoryEntry,
+    DepthConfig,
 )
 from agents.orchestrator import run_full_pipeline, get_compiled_graph
 from agents.competitor_analysis import analyze_competitors
@@ -46,6 +47,8 @@ from agents.feedback_memory import (
     add_guideline,
     get_feedback_log,
 )
+from agents.depth_controller import determine_depth
+from scoring_history import record_score, get_score_history
 
 
 @asynccontextmanager
@@ -82,11 +85,29 @@ async def health():
 async def pipeline(request: FullPipelineRequest):
     """Execute the complete Sitescore multi-agent pipeline."""
     try:
+        # Auto-assign depth if not provided
+        depth = request.depth_config
+        if depth is None:
+            depth = await determine_depth(request.brand_input)
         result = await run_full_pipeline(
             brand_input=request.brand_input,
             custom_dimensions=request.custom_dimensions,
             session_id=request.session_id,
+            depth_config=depth,
         )
+        # Record score to history for trend projection
+        try:
+            await record_score(
+                brand_name=request.brand_input.brand_name,
+                session_id=request.session_id,
+                tagline=request.brand_input.current_tagline,
+                overall_score=result.evaluation.user_score.overall_score,
+                dimension_scores=[ds.model_dump() for ds in result.evaluation.user_score.dimension_scores],
+                competitor_scores=[{"brand": cs.brand_name, "score": cs.overall_score} for cs in result.evaluation.competitor_scores],
+                depth_level=depth.depth_level if depth else "standard",
+            )
+        except Exception as ex:
+            log.warning("Failed to record score history: %s", ex)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -101,11 +122,21 @@ async def pipeline_stream(request: FullPipelineRequest):
     """
 
     async def event_generator():
+        # Auto-assign depth if not provided
+        depth = request.depth_config
+        if depth is None:
+            depth = await determine_depth(request.brand_input)
+            yield {
+                "event": "depth_assigned",
+                "data": _json.dumps({"depth_level": depth.depth_level, "enable_trends": depth.enable_trends}),
+            }
+
         graph = get_compiled_graph()
         initial_state = {
             "brand_input": request.brand_input,
             "custom_dimensions": request.custom_dimensions,
             "session_id": request.session_id,
+            "depth_config": depth,
         }
         config = {"configurable": {"thread_id": request.session_id + "_stream"}}
 
@@ -147,9 +178,32 @@ async def pipeline_stream(request: FullPipelineRequest):
                 evaluation=accumulated["evaluation"],
                 suggestions=accumulated["suggestions"],
                 memory_context=accumulated.get("memory_context", []),
+                trend_data=accumulated.get("trend_data"),
+                brand_voice_data=accumulated.get("brand_voice_data"),
+                audience_resonance_data=accumulated.get("audience_resonance_data"),
+                creative_variants_data=accumulated.get("creative_variants_data"),
+                linguistic_data=accumulated.get("linguistic_data"),
+                gap_analysis_data=accumulated.get("gap_analysis_data"),
+                positioning_data=accumulated.get("positioning_data"),
+                ab_test_data=accumulated.get("ab_test_data"),
+                roadmap_data=accumulated.get("roadmap_data"),
+                trend_projection_data=accumulated.get("trend_projection_data"),
             )
             elapsed = time.perf_counter() - pipeline_t0
             log.info("◀ SSE pipeline DONE   brand=%s  %.1fs  keys=%s", brand_name, elapsed, list(accumulated.keys()))
+            # Record score to history for trend projection
+            try:
+                await record_score(
+                    brand_name=brand_name,
+                    session_id=request.session_id,
+                    tagline=request.brand_input.current_tagline if hasattr(request.brand_input, "current_tagline") else request.brand_input.get("current_tagline", ""),
+                    overall_score=response.evaluation.user_score.overall_score,
+                    dimension_scores=[ds.model_dump() for ds in response.evaluation.user_score.dimension_scores],
+                    competitor_scores=[{"brand": cs.brand_name, "score": cs.overall_score} for cs in response.evaluation.competitor_scores],
+                    depth_level=depth.depth_level if depth else "standard",
+                )
+            except Exception as ex:
+                log.warning("Failed to record SSE score history: %s", ex)
             yield {
                 "event": "result",
                 "data": response.model_dump_json(),
@@ -233,6 +287,13 @@ async def add_brand_guideline(brand_name: str, guideline: str):
 async def feedback_log(brand_name: str | None = None):
     """Retrieve the feedback log."""
     return get_feedback_log(brand_name)
+
+
+# -- Scoring History --
+@app.get("/api/history/{brand_name}")
+async def scoring_history(brand_name: str, limit: int = 20):
+    """Retrieve scoring history for a brand (for trend projection)."""
+    return await get_score_history(brand_name, limit=limit)
 
 
 if __name__ == "__main__":

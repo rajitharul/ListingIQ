@@ -7,6 +7,7 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "")
 
 # LangGraph SQLite checkpoint persistence
 SQLITE_CHECKPOINT_PATH = os.getenv(

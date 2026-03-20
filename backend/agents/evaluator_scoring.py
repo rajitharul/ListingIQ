@@ -14,6 +14,7 @@ from models.schemas import (
     ContentScore,
     DimensionScore,
     EvaluationResult,
+    TrendAnalysisResult,
 )
 from agents.llm_client import get_openai_client, logged_chat_completion
 
@@ -25,6 +26,7 @@ async def evaluate_all(
     competitors: list[Competitor],
     dimensions: list[Dimension],
     benchmark: BenchmarkSnippet,
+    trend_context: str = "",
 ) -> EvaluationResult:
     """Score the user's content + all competitors across every dimension."""
 
@@ -61,7 +63,7 @@ SCORING RULES:
 4. Consider the RELATIVE performance: who is strongest in each dimension?
 5. Provide specific evidence for each score
 
-Return a JSON object:
+{f"MARKET TREND CONTEXT (use as scoring modifier):{chr(10)}{trend_context}{chr(10)}Brands riding positive trends should get a slight boost; those facing headwinds a slight penalty.{chr(10)}" if trend_context else ""}Return a JSON object:
 {{
   "scores": [
     {{
@@ -159,6 +161,17 @@ async def evaluator_node(state: dict) -> dict:
     if isinstance(benchmark, dict):
         from models.schemas import DimensionScore as DS
         benchmark = BenchmarkSnippet(**{**benchmark, "dimension_scores": [DS(**ds) if isinstance(ds, dict) else ds for ds in benchmark.get("dimension_scores", [])]})
-    evaluation = await evaluate_all(brand_input, competitors, dimensions, benchmark)
+
+    # Build trend context if available
+    trend_ctx = ""
+    trend_data = state.get("trend_data")
+    if trend_data:
+        td = trend_data if isinstance(trend_data, TrendAnalysisResult) else TrendAnalysisResult(**trend_data)
+        lines = [f"Brand '{td.brand_trend.competitor_name}': interest={td.brand_trend.search_interest}, direction={td.brand_trend.trend_direction}, sentiment={td.brand_trend.sentiment_score}"]
+        for ct in td.competitor_trends:
+            lines.append(f"'{ct.competitor_name}': interest={ct.search_interest}, direction={ct.trend_direction}, sentiment={ct.sentiment_score}")
+        trend_ctx = "\n".join(lines)
+
+    evaluation = await evaluate_all(brand_input, competitors, dimensions, benchmark, trend_context=trend_ctx)
     log.info("⚙ evaluator_node EXIT   %.1fs  user_score=%.1f  rank=#%d", time.perf_counter() - t0, evaluation.user_score.overall_score, evaluation.user_score.rank)
     return {"evaluation": evaluation}

@@ -16,6 +16,8 @@ from models.schemas import (
     EvaluationResult,
     ImprovementSuggestion,
     MemoryEntry,
+    TrendAnalysisResult,
+    DepthConfig,
 )
 
 
@@ -48,3 +50,20 @@ class SitescoreState(TypedDict, total=False):
 
     # improvement_node →
     suggestions: list[ImprovementSuggestion]
+
+    # trend_sentiment_node →
+    trend_data: TrendAnalysisResult | None
+
+    # depth control
+    depth_config: DepthConfig | None
+
+    # ── Branch agent outputs ──────────────────────────────────────
+    brand_voice_data: dict | None
+    audience_resonance_data: dict | None
+    creative_variants_data: dict | None
+    linguistic_data: dict | None
+    gap_analysis_data: dict | None
+    positioning_data: dict | None
+    ab_test_data: dict | None
+    roadmap_data: dict | None
+    trend_projection_data: dict | None

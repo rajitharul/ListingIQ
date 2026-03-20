@@ -11,6 +11,7 @@ from models.schemas import (
     EvaluationResult,
     ImprovementSuggestion,
     MemoryEntry,
+    TrendAnalysisResult,
 )
 from agents.llm_client import get_openai_client, logged_chat_completion
 
@@ -22,6 +23,7 @@ async def suggest_improvements(
     evaluation: EvaluationResult,
     target_dimension: str | None = None,
     memory_context: list[MemoryEntry] | None = None,
+    trend_context: str = "",
 ) -> list[ImprovementSuggestion]:
     """Generate targeted improvement suggestions for the weakest dimensions."""
 
@@ -67,7 +69,7 @@ BENCHMARK (perfect tagline): "{evaluation.benchmark.ideal_tagline}"
 DIMENSIONS TO IMPROVE:
 {dims_to_improve}
 {memory_guidelines}
-
+{f"MARKET TREND INTELLIGENCE:{chr(10)}{trend_context}{chr(10)}Leverage positive trends and address threats in your suggestions.{chr(10)}" if trend_context else ""}
 RULES:
 1. Make the MINIMUM changes needed to boost each dimension
 2. Show exactly what words/phrases to remove and add
@@ -111,8 +113,16 @@ async def improvement_node(state: dict) -> dict:
     brand_input = BrandInput(**state["brand_input"]) if isinstance(state["brand_input"], dict) else state["brand_input"]
     evaluation = state["evaluation"]
     memory_context = state.get("memory_context", [])
+
+    # Build trend context if available
+    trend_ctx = ""
+    trend_data = state.get("trend_data")
+    if trend_data:
+        td = trend_data if isinstance(trend_data, TrendAnalysisResult) else TrendAnalysisResult(**trend_data)
+        trend_ctx = f"Market momentum: {td.market_momentum}\nOpportunities: {', '.join(td.opportunities)}\nThreats: {', '.join(td.threats)}"
+
     suggestions = await suggest_improvements(
-        brand_input, evaluation, memory_context=memory_context
+        brand_input, evaluation, memory_context=memory_context, trend_context=trend_ctx
     )
     log.info("⚙ improvement_node EXIT  %.1fs  suggestions=%d", time.perf_counter() - t0, len(suggestions))
     return {"suggestions": suggestions}

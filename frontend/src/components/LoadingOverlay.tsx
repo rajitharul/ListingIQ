@@ -4,13 +4,18 @@ import { useState, useEffect, useMemo } from "react";
 
 const PIPELINE_STEPS = [
   {
+    agent: "Depth Controller",
+    description: "Analysing brand complexity to determine optimal pipeline depth...",
+    nodeKey: "depth_controller",
+  },
+  {
     agent: "Competitor Analysis Agent",
     description: "Mapping market landscape and retrieving top competitors...",
     nodeKey: "competitor_analysis",
   },
   {
     agent: "Evaluation Dimension Agent",
-    description: "Establishing scoring matrix across 6 dimensions...",
+    description: "Establishing scoring matrix across dimensions...",
     nodeKey: "dimensions",
   },
   {
@@ -19,9 +24,34 @@ const PIPELINE_STEPS = [
     nodeKey: "memory",
   },
   {
+    agent: "Trend & Sentiment Agent",
+    description: "Gathering real-time market trends and news sentiment...",
+    nodeKey: "trend_sentiment",
+  },
+  {
+    agent: "Brand Voice Profiler",
+    description: "Profiling brand voice and tone across competitors...",
+    nodeKey: "brand_voice_profiler",
+  },
+  {
+    agent: "Audience Resonance Agent",
+    description: "Mapping message-audience fit and emotional triggers...",
+    nodeKey: "audience_resonance",
+  },
+  {
     agent: "Benchmark Generation Agent",
     description: "Generating the ideal 10/10 benchmark tagline...",
     nodeKey: "benchmark",
+  },
+  {
+    agent: "Creative Variants Agent",
+    description: "Generating alternative creative approaches...",
+    nodeKey: "creative_variants",
+  },
+  {
+    agent: "Linguistic Analysis Agent",
+    description: "Analysing phonetics, rhythm, and rhetorical devices...",
+    nodeKey: "linguistic_analysis",
   },
   {
     agent: "Evaluator Scoring Agent",
@@ -29,9 +59,34 @@ const PIPELINE_STEPS = [
     nodeKey: "evaluator",
   },
   {
+    agent: "Gap Analysis Agent",
+    description: "Identifying competitive score gaps and quick wins...",
+    nodeKey: "gap_analysis",
+  },
+  {
+    agent: "Competitive Positioning Agent",
+    description: "Mapping the positioning landscape and whitespace...",
+    nodeKey: "competitive_positioning",
+  },
+  {
+    agent: "Trend Projection Agent",
+    description: "Analysing historical scores to project future trends...",
+    nodeKey: "trend_projection",
+  },
+  {
     agent: "Content Improvement Agent",
     description: "Generating targeted micro-improvements...",
     nodeKey: "improvement",
+  },
+  {
+    agent: "A/B Test Generator",
+    description: "Creating structured A/B test plans...",
+    nodeKey: "ab_test_generator",
+  },
+  {
+    agent: "Implementation Roadmap",
+    description: "Building a phased rollout plan...",
+    nodeKey: "implementation_roadmap",
   },
 ];
 
@@ -104,7 +159,7 @@ export default function LoadingOverlay({ isVisible, completedNodes = [] }: Props
           </div>
           <h2 className="text-xl font-bold">Multi-Agent Pipeline Running</h2>
           <p className="text-sm text-[var(--text-muted)] mt-1">
-            6 specialized AI agents working in concert
+            Up to 16 specialized AI agents working in concert
           </p>
         </div>
 

@@ -12,6 +12,7 @@ from models.schemas import (
     Dimension,
     BenchmarkSnippet,
     DimensionScore,
+    TrendAnalysisResult,
 )
 from agents.llm_client import get_openai_client, logged_chat_completion
 
@@ -22,11 +23,16 @@ async def generate_benchmark(
     brand_input: BrandInput,
     competitors: list[Competitor],
     dimensions: list[Dimension],
+    trend_context: str = "",
 ) -> BenchmarkSnippet:
     """Generate the ideal 10/10 benchmark tagline and description."""
 
     dim_descriptions = "\n".join(f"- {d.name}: {d.description}" for d in dimensions)
     comp_context = "\n".join(f'- {c.name}: "{c.tagline}"' for c in competitors)
+
+    trend_section = ""
+    if trend_context:
+        trend_section = f"\n\nMARKET TREND INTELLIGENCE:\n{trend_context}\nUse these trends to inform what a PERFECT tagline would emphasise right now.\n"
 
     prompt = f"""You are the world's foremost marketing copywriter and linguistic analyst.
 
@@ -42,6 +48,7 @@ COMPETITOR TAGLINES (must clearly beat all of them):
 
 SCORING DIMENSIONS (must score 10/10 on each):
 {dim_descriptions}
+{trend_section}
 
 Return a JSON object with:
 {{
@@ -99,6 +106,14 @@ async def benchmark_node(state: dict) -> dict:
     dimensions = state["dimensions"]
     if dimensions and isinstance(dimensions[0], dict):
         dimensions = [Dimension(**d) for d in dimensions]
-    benchmark = await generate_benchmark(brand_input, competitors, dimensions)
+
+    # Build trend context if available
+    trend_ctx = ""
+    trend_data = state.get("trend_data")
+    if trend_data:
+        td = trend_data if isinstance(trend_data, TrendAnalysisResult) else TrendAnalysisResult(**trend_data)
+        trend_ctx = f"Market momentum: {td.market_momentum}\nOpportunities: {', '.join(td.opportunities)}\nThreats: {', '.join(td.threats)}"
+
+    benchmark = await generate_benchmark(brand_input, competitors, dimensions, trend_context=trend_ctx)
     log.info("⚙ benchmark_node EXIT   %.1fs  tagline=\"%s\"", time.perf_counter() - t0, benchmark.ideal_tagline[:60])
     return {"benchmark": benchmark}

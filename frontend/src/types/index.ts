@@ -69,6 +69,27 @@ export interface EvaluationResult {
   insights: string[];
 }
 
+export interface CompetitorTrend {
+  competitor_name: string;
+  search_interest: number;
+  trend_direction: "rising" | "declining" | "stable";
+  recent_headlines: string[];
+  sentiment_score: number;
+}
+
+export interface TrendAnalysisResult {
+  brand_trend: CompetitorTrend;
+  competitor_trends: CompetitorTrend[];
+  market_momentum: string;
+  opportunities: string[];
+  threats: string[];
+}
+
+export interface DepthConfig {
+  enable_trends: boolean;
+  depth_level: "quick" | "standard" | "deep";
+}
+
 export interface FullPipelineResponse {
   competitors: CompetitorAnalysisResult;
   evaluation: EvaluationResult;
@@ -79,6 +100,17 @@ export interface FullPipelineResponse {
     source: string;
     confidence: number;
   }[];
+  trend_data?: TrendAnalysisResult | null;
+  // Branch agent outputs (deep mode)
+  brand_voice_data?: Record<string, unknown> | null;
+  audience_resonance_data?: Record<string, unknown> | null;
+  creative_variants_data?: Record<string, unknown> | null;
+  linguistic_data?: Record<string, unknown> | null;
+  gap_analysis_data?: Record<string, unknown> | null;
+  positioning_data?: Record<string, unknown> | null;
+  ab_test_data?: Record<string, unknown> | null;
+  roadmap_data?: Record<string, unknown> | null;
+  trend_projection_data?: Record<string, unknown> | null;
 }
 
 export interface FeedbackEntry {
