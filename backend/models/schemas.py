@@ -113,6 +113,27 @@ class TrendAnalysisResult(BaseModel):
 class DepthConfig(BaseModel):
     enable_trends: bool = Field(True, description="Run Trend & Sentiment branch")
     depth_level: str = Field("standard", description="quick | standard | deep")
+    reasoning: str = Field("", description="Why the depth controller chose this level")
+
+
+class AgentNodeTrace(BaseModel):
+    """Execution trace for a single agent node."""
+    name: str
+    role: str = Field("", description="core | branch | meta")
+    status: str = Field("skipped", description="completed | skipped")
+    duration_ms: float = 0.0
+    parent: str = Field("", description="Node this branches from")
+
+
+class AgentTrace(BaseModel):
+    """Full execution trace for the pipeline run."""
+    depth_level: str = "standard"
+    depth_reasoning: str = ""
+    enable_trends: bool = True
+    total_duration_ms: float = 0.0
+    nodes_executed: int = 0
+    nodes_skipped: int = 0
+    nodes: list[AgentNodeTrace] = []
 
 
 class FullPipelineRequest(BaseModel):
@@ -138,3 +159,4 @@ class FullPipelineResponse(BaseModel):
     ab_test_data: dict | None = None
     roadmap_data: dict | None = None
     trend_projection_data: dict | None = None
+    agent_trace: AgentTrace | None = None

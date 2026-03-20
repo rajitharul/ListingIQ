@@ -11,6 +11,7 @@ import FeedbackPanel from "@/components/FeedbackPanel";
 import TrendPanel from "@/components/TrendPanel";
 import DeepInsightsPanel from "@/components/DeepInsightsPanel";
 import TrendProjectionPanel from "@/components/TrendProjectionPanel";
+import AgentVisualizer from "@/components/AgentVisualizer";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { runPipeline, runPipelineStream } from "@/lib/api";
 import type {
@@ -159,6 +160,11 @@ export default function Home() {
                   </span>
                 </div>
               </div>
+
+              {/* Agent Pipeline Visualizer */}
+              {result.agent_trace && (
+                <AgentVisualizer trace={result.agent_trace} />
+              )}
 
               {/* Competitor cards */}
               <CompetitorCards

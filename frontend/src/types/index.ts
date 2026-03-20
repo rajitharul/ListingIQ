@@ -88,6 +88,25 @@ export interface TrendAnalysisResult {
 export interface DepthConfig {
   enable_trends: boolean;
   depth_level: "quick" | "standard" | "deep";
+  reasoning?: string;
+}
+
+export interface AgentNodeTrace {
+  name: string;
+  role: "core" | "branch" | "meta";
+  status: "completed" | "skipped";
+  duration_ms: number;
+  parent: string;
+}
+
+export interface AgentTrace {
+  depth_level: string;
+  depth_reasoning: string;
+  enable_trends: boolean;
+  total_duration_ms: number;
+  nodes_executed: number;
+  nodes_skipped: number;
+  nodes: AgentNodeTrace[];
 }
 
 export interface FullPipelineResponse {
@@ -111,6 +130,7 @@ export interface FullPipelineResponse {
   ab_test_data?: Record<string, unknown> | null;
   roadmap_data?: Record<string, unknown> | null;
   trend_projection_data?: Record<string, unknown> | null;
+  agent_trace?: AgentTrace | null;
 }
 
 export interface FeedbackEntry {

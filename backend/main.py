@@ -34,6 +34,8 @@ from models.schemas import (
     FeedbackEntry,
     MemoryEntry,
     DepthConfig,
+    AgentNodeTrace,
+    AgentTrace,
 )
 from agents.orchestrator import run_full_pipeline, get_compiled_graph
 from agents.competitor_analysis import analyze_competitors
@@ -49,6 +51,59 @@ from agents.feedback_memory import (
 )
 from agents.depth_controller import determine_depth
 from scoring_history import record_score, get_score_history
+
+
+# ── Agent trace builder ──────────────────────────────────────
+# Maps every possible node to its role and parent (which node it branches from)
+_AGENT_CATALOG = {
+    "depth_controller":        {"role": "meta",   "parent": ""},
+    "competitor_analysis":     {"role": "core",   "parent": "START"},
+    "dimensions":              {"role": "core",   "parent": "START"},
+    "memory":                  {"role": "core",   "parent": "START"},
+    "trend_sentiment":         {"role": "branch", "parent": "competitor_analysis"},
+    "brand_voice_profiler":    {"role": "branch", "parent": "competitor_analysis"},
+    "audience_resonance":      {"role": "branch", "parent": "competitor_analysis"},
+    "benchmark":               {"role": "core",   "parent": "competitor_analysis"},
+    "evaluator":               {"role": "core",   "parent": "benchmark"},
+    "creative_variants":       {"role": "branch", "parent": "benchmark"},
+    "linguistic_analysis":     {"role": "branch", "parent": "benchmark"},
+    "improvement":             {"role": "core",   "parent": "evaluator"},
+    "gap_analysis":            {"role": "branch", "parent": "evaluator"},
+    "competitive_positioning": {"role": "branch", "parent": "evaluator"},
+    "trend_projection":        {"role": "branch", "parent": "evaluator"},
+    "ab_test_generator":       {"role": "branch", "parent": "improvement"},
+    "implementation_roadmap":  {"role": "branch", "parent": "improvement"},
+}
+
+
+def _build_agent_trace(
+    depth: DepthConfig,
+    executed_nodes: list[str],
+    node_timings: dict[str, float],
+    total_ms: float,
+) -> AgentTrace:
+    """Build AgentTrace from the list of nodes that actually executed."""
+    nodes = []
+    for name, meta in _AGENT_CATALOG.items():
+        ran = name in executed_nodes
+        nodes.append(AgentNodeTrace(
+            name=name,
+            role=meta["role"],
+            status="completed" if ran else "skipped",
+            duration_ms=node_timings.get(name, 0.0),
+            parent=meta["parent"],
+        ))
+    completed = sum(1 for n in nodes if n.status == "completed")
+    skipped = sum(1 for n in nodes if n.status == "skipped")
+    return AgentTrace(
+        depth_level=depth.depth_level if depth else "standard",
+        depth_reasoning=depth.reasoning if depth else "",
+        enable_trends=depth.enable_trends if depth else True,
+        total_duration_ms=total_ms,
+        nodes_executed=completed,
+        nodes_skipped=skipped,
+        nodes=nodes,
+    )
 
 
 @asynccontextmanager
@@ -85,6 +140,7 @@ async def health():
 async def pipeline(request: FullPipelineRequest):
     """Execute the complete Sitescore multi-agent pipeline."""
     try:
+        t0 = time.perf_counter()
         # Auto-assign depth if not provided
         depth = request.depth_config
         if depth is None:
@@ -95,6 +151,30 @@ async def pipeline(request: FullPipelineRequest):
             session_id=request.session_id,
             depth_config=depth,
         )
+        total_ms = (time.perf_counter() - t0) * 1000
+        # Build agent trace (no per-node timing for non-streaming endpoint)
+        executed = ["depth_controller", "competitor_analysis", "dimensions", "memory", "benchmark", "evaluator", "improvement"]
+        if result.trend_data:
+            executed.append("trend_sentiment")
+        if result.brand_voice_data:
+            executed.append("brand_voice_profiler")
+        if result.audience_resonance_data:
+            executed.append("audience_resonance")
+        if result.creative_variants_data:
+            executed.append("creative_variants")
+        if result.linguistic_data:
+            executed.append("linguistic_analysis")
+        if result.gap_analysis_data:
+            executed.append("gap_analysis")
+        if result.positioning_data:
+            executed.append("competitive_positioning")
+        if result.trend_projection_data:
+            executed.append("trend_projection")
+        if result.ab_test_data:
+            executed.append("ab_test_generator")
+        if result.roadmap_data:
+            executed.append("implementation_roadmap")
+        result.agent_trace = _build_agent_trace(depth, executed, {}, total_ms)
         # Record score to history for trend projection
         try:
             await record_score(
@@ -128,7 +208,7 @@ async def pipeline_stream(request: FullPipelineRequest):
             depth = await determine_depth(request.brand_input)
             yield {
                 "event": "depth_assigned",
-                "data": _json.dumps({"depth_level": depth.depth_level, "enable_trends": depth.enable_trends}),
+                "data": _json.dumps({"depth_level": depth.depth_level, "enable_trends": depth.enable_trends, "reasoning": depth.reasoning}),
             }
 
         graph = get_compiled_graph()
@@ -145,7 +225,10 @@ async def pipeline_stream(request: FullPipelineRequest):
         pipeline_t0 = time.perf_counter()
 
         accumulated = {}
+        executed_nodes: list[str] = ["depth_controller"]  # always runs first
+        node_timings: dict[str, float] = {}
         graph_error = None
+        node_t0 = time.perf_counter()
         try:
             async for event in graph.astream(
                 initial_state, config=config, stream_mode="updates"
@@ -153,12 +236,17 @@ async def pipeline_stream(request: FullPipelineRequest):
                 # event shape: {"node_name": {"key": value, ...}}
                 for node_name, node_output in event.items():
                     if node_name == "__start__":
+                        node_t0 = time.perf_counter()
                         continue
+                    node_elapsed = (time.perf_counter() - node_t0) * 1000
+                    node_timings[node_name] = node_elapsed
+                    node_t0 = time.perf_counter()
+                    executed_nodes.append(node_name)
                     accumulated.update(node_output)
-                    log.info("  ✓ node_complete → %s  (keys: %s)", node_name, list(node_output.keys()))
+                    log.info("  ✓ node_complete → %s  (%.0fms, keys: %s)", node_name, node_elapsed, list(node_output.keys()))
                     yield {
                         "event": "node_complete",
-                        "data": _json.dumps({"node": node_name}),
+                        "data": _json.dumps({"node": node_name, "duration_ms": round(node_elapsed, 1)}),
                     }
         except Exception as e:
             graph_error = e
@@ -190,7 +278,9 @@ async def pipeline_stream(request: FullPipelineRequest):
                 trend_projection_data=accumulated.get("trend_projection_data"),
             )
             elapsed = time.perf_counter() - pipeline_t0
-            log.info("◀ SSE pipeline DONE   brand=%s  %.1fs  keys=%s", brand_name, elapsed, list(accumulated.keys()))
+            total_ms = elapsed * 1000
+            response.agent_trace = _build_agent_trace(depth, executed_nodes, node_timings, total_ms)
+            log.info("◀ SSE pipeline DONE   brand=%s  %.1fs  nodes=%d  keys=%s", brand_name, elapsed, len(executed_nodes), list(accumulated.keys()))
             # Record score to history for trend projection
             try:
                 await record_score(

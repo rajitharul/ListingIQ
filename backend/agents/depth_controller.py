@@ -63,7 +63,7 @@ Return ONLY valid JSON."""
             enable_trends,
             reasoning,
         )
-        return DepthConfig(enable_trends=enable_trends, depth_level=depth_level)
+        return DepthConfig(enable_trends=enable_trends, depth_level=depth_level, reasoning=reasoning)
     except Exception as e:
         log.error("Depth controller failed (%s) — defaulting to standard", e)
-        return DepthConfig(enable_trends=True, depth_level="standard")
+        return DepthConfig(enable_trends=True, depth_level="standard", reasoning=f"Fallback: {e}")
