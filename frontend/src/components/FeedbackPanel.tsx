@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { BrandInput } from "@/types";
+import type { ListingInput } from "@/types";
 import { addGuideline } from "@/lib/api";
 
 interface Props {
-  brandInput: BrandInput;
+  listingInput: ListingInput;
   memoryContext: {
     brand_name: string;
     guideline: string;
@@ -14,13 +14,13 @@ interface Props {
   }[];
 }
 
-export default function FeedbackPanel({ brandInput, memoryContext }: Props) {
+export default function FeedbackPanel({ listingInput, memoryContext }: Props) {
   const [guideline, setGuideline] = useState("");
   const [saved, setSaved] = useState(false);
 
   const handleAddGuideline = async () => {
     if (!guideline.trim()) return;
-    await addGuideline(brandInput.brand_name, guideline);
+    await addGuideline(listingInput.brand_name, guideline);
     setSaved(true);
     setGuideline("");
     setTimeout(() => setSaved(false), 2000);
@@ -36,7 +36,6 @@ export default function FeedbackPanel({ brandInput, memoryContext }: Props) {
         across sessions.
       </p>
 
-      {/* Add guideline */}
       <div className="flex gap-2 mb-6">
         <input
           value={guideline}
@@ -52,7 +51,6 @@ export default function FeedbackPanel({ brandInput, memoryContext }: Props) {
         </button>
       </div>
 
-      {/* Existing memory */}
       {memoryContext.length > 0 && (
         <div>
           <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">

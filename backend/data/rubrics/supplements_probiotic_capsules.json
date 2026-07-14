@@ -1,0 +1,68 @@
+{
+  "vertical": "Supplements & Nutraceuticals",
+  "category": "Digestive Health",
+  "subcategory": "Probiotic Capsules",
+  "version": "1.0",
+  "dimensions": [
+    {
+      "name": "Strain Specificity",
+      "weight": 0.15,
+      "description": "Are specific probiotic strains named (Lactobacillus, Bifidobacterium, etc.) with strain-level detail?",
+      "scoring_criteria": "0: No strains. 3: Generic 'probiotic blend'. 5: Genus-level naming. 7: Species-level naming with count. 10: Full strain-level identification (e.g. L. acidophilus LA-5) with clinically studied strains noted."
+    },
+    {
+      "name": "CFU Count & Potency",
+      "weight": 0.14,
+      "description": "Is the CFU count clearly stated with guaranteed-at-expiry vs at-manufacture distinction?",
+      "scoring_criteria": "0: No CFU. 3: Just a number. 5: CFU per capsule stated. 7: CFU with 'at time of manufacture' noted. 10: Guaranteed CFU at expiry date with overage explanation."
+    },
+    {
+      "name": "Delivery Technology",
+      "weight": 0.12,
+      "description": "Is delayed-release, enteric coating, or acid-resistant capsule technology mentioned?",
+      "scoring_criteria": "0: No mention. 3: 'Capsule'. 5: 'Veggie capsule'. 7: Delayed-release or acid-resistant mentioned. 10: Specific delivery tech explained with survival rate or stomach acid protection data."
+    },
+    {
+      "name": "Targeted Benefits",
+      "weight": 0.12,
+      "description": "Are specific health outcomes targeted (bloating, IBS, immunity, women's health, gut-brain)?",
+      "scoring_criteria": "0: Generic 'digestive health'. 3: One vague benefit. 5: 2-3 specific benefits. 7: Targeted benefits for specific conditions. 10: Multi-benefit positioning with audience segmentation."
+    },
+    {
+      "name": "Prebiotic Inclusion",
+      "weight": 0.08,
+      "description": "Is a prebiotic component included and explained?",
+      "scoring_criteria": "0: No mention. 3: 'With prebiotics'. 5: Prebiotic type named. 7: Prebiotic explained with synbiotic benefit. 10: Specific prebiotic (inulin, FOS) with dosage and symbiotic mechanism explained."
+    },
+    {
+      "name": "Shelf Stability",
+      "weight": 0.08,
+      "description": "Is shelf stability, storage requirements, and no-refrigeration-needed clearly communicated?",
+      "scoring_criteria": "0: No mention. 3: 'Store in cool place'. 5: 'No refrigeration needed'. 7: Shelf-stable technology explained. 10: Specific shelf-stable tech with stability testing data."
+    },
+    {
+      "name": "Allergen & Dietary Callouts",
+      "weight": 0.08,
+      "description": "Are dairy-free, gluten-free, vegan, soy-free, no artificial ingredients stated?",
+      "scoring_criteria": "0: None. 3: One callout. 5: 2-3 callouts. 7: Comprehensive. 10: Full allergen statement critical for probiotic buyers."
+    },
+    {
+      "name": "Clinical Backing",
+      "weight": 0.08,
+      "description": "Are clinical studies, doctor-recommended, or research references mentioned?",
+      "scoring_criteria": "0: None. 3: 'Scientifically formulated'. 5: 'Clinically studied strains'. 7: Specific study referenced. 10: Named clinical studies with outcomes data."
+    },
+    {
+      "name": "Keyword Coverage",
+      "weight": 0.08,
+      "description": "Does the listing include category-relevant search terms used by top competitors?",
+      "scoring_criteria": "0: Minimal. 5: Moderate. 10: Comprehensive keyword strategy."
+    },
+    {
+      "name": "Trust Signals",
+      "weight": 0.07,
+      "description": "Are GMP, third-party tested, doctor-formulated, satisfaction guarantee present?",
+      "scoring_criteria": "0: None. 5: Basic signals. 10: Comprehensive trust framework."
+    }
+  ]
+}

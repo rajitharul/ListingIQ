@@ -1,0 +1,68 @@
+{
+  "vertical": "Beauty & Cosmetics",
+  "category": "Skincare",
+  "subcategory": "Hyaluronic Acid Serum",
+  "version": "1.0",
+  "dimensions": [
+    {
+      "name": "Molecular Weight Explanation",
+      "weight": 0.14,
+      "description": "Are different molecular weights of HA explained (low, medium, high) and their penetration depth?",
+      "scoring_criteria": "0: No mention. 3: 'Hyaluronic acid'. 5: 'Multi-molecular' or 'multi-weight'. 7: Weight types with surface vs deep hydration. 10: Full molecular weight breakdown with skin layer targeting explanation."
+    },
+    {
+      "name": "Hydration Duration Claims",
+      "weight": 0.12,
+      "description": "Are long-lasting hydration claims made with specific timeframes?",
+      "scoring_criteria": "0: No claims. 3: 'Hydrating'. 5: 'Long-lasting hydration'. 7: Specific hours (24h, 48h, 72h). 10: Specific duration with testing methodology or clinical backing."
+    },
+    {
+      "name": "Concentration Transparency",
+      "weight": 0.10,
+      "description": "Is the HA concentration or percentage disclosed?",
+      "scoring_criteria": "0: No concentration. 3: 'High concentration'. 5: Percentage stated. 7: Percentage with why that level. 10: Percentage with optimal concentration explanation for efficacy vs stickiness."
+    },
+    {
+      "name": "Layering Guidance",
+      "weight": 0.10,
+      "description": "Is guidance provided for layering with other products and application on damp skin?",
+      "scoring_criteria": "0: No guidance. 3: 'Apply to face'. 5: 'Apply to damp skin'. 7: Damp skin + layering order. 10: Full application protocol including humidity considerations and product pairing."
+    },
+    {
+      "name": "Complementary Ingredients",
+      "weight": 0.10,
+      "description": "Are combination ingredients highlighted (ceramides, B5/panthenol, niacinamide, glycerin)?",
+      "scoring_criteria": "0: None. 3: One mentioned. 5: 2-3 mentioned. 7: Synergy explained. 10: Full ingredient synergy map with hydration-locking explanation."
+    },
+    {
+      "name": "Texture & Sensory",
+      "weight": 0.08,
+      "description": "Is texture described (lightweight, gel-like, non-sticky, fast-absorbing)?",
+      "scoring_criteria": "0: No description. 5: Basic texture. 10: Full sensory profile including finish and under-makeup compatibility."
+    },
+    {
+      "name": "Skin Type Targeting",
+      "weight": 0.08,
+      "description": "Is suitability for specific skin types and concerns addressed?",
+      "scoring_criteria": "0: No targeting. 5: 'All skin types'. 10: Specific type suitability with dehydration vs dry skin distinction."
+    },
+    {
+      "name": "Certifications",
+      "weight": 0.08,
+      "description": "Are vegan, cruelty-free, fragrance-free, paraben-free stated?",
+      "scoring_criteria": "0: None. 5: Some. 10: Comprehensive."
+    },
+    {
+      "name": "Outcome Specificity",
+      "weight": 0.10,
+      "description": "Are specific hydration outcomes promised (plumping, fine line reduction, dewy finish, barrier repair)?",
+      "scoring_criteria": "0: No outcomes. 5: Generic. 10: Specific outcomes with visible timeline."
+    },
+    {
+      "name": "Keyword Coverage",
+      "weight": 0.10,
+      "description": "Category-relevant search terms coverage.",
+      "scoring_criteria": "0: Minimal. 5: Moderate. 10: Comprehensive."
+    }
+  ]
+}

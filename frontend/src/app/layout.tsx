@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sitescore - AI Marketing Benchmarking Engine",
+  title: "ListingIQ - AI Product Listing Optimization Engine",
   description:
-    "Multi-dimensional, multi-agent competitive benchmarking for marketing content",
+    "Optimize your ecommerce product listings with an 8-agent AI pipeline. Get scores, recommendations, and optimized rewrites.",
 };
 
 export default function RootLayout({

@@ -1,0 +1,68 @@
+{
+  "vertical": "Beauty & Cosmetics",
+  "category": "Skincare",
+  "subcategory": "Sunscreen SPF 50",
+  "version": "1.0",
+  "dimensions": [
+    {
+      "name": "SPF & Broad Spectrum",
+      "weight": 0.14,
+      "description": "Is SPF level and broad spectrum/PA rating clearly stated?",
+      "scoring_criteria": "0: No SPF. 3: SPF number only. 5: SPF + 'broad spectrum'. 7: SPF + PA rating. 10: Full SPF + PA++++ + UVA/UVB protection explanation."
+    },
+    {
+      "name": "Filter Type Transparency",
+      "weight": 0.14,
+      "description": "Is the filter type disclosed (mineral/physical, chemical, hybrid)?",
+      "scoring_criteria": "0: No filter info. 3: Vague. 5: 'Mineral' or 'chemical' stated. 7: Specific active ingredients (zinc oxide, titanium dioxide, avobenzone). 10: Full filter breakdown with percentage and protection mechanism."
+    },
+    {
+      "name": "White Cast & Finish",
+      "weight": 0.12,
+      "description": "Is white cast addressed and finish type described (matte, dewy, natural)?",
+      "scoring_criteria": "0: No mention. 3: 'Lightweight'. 5: 'No white cast'. 7: White cast + finish type. 10: White cast addressed for all skin tones + finish type + photo evidence or testing."
+    },
+    {
+      "name": "Under-Makeup Compatibility",
+      "weight": 0.08,
+      "description": "Is under-makeup performance and daily wear suitability communicated?",
+      "scoring_criteria": "0: No mention. 3: 'Daily wear'. 5: 'Works under makeup'. 7: Specific makeup compatibility details. 10: Full daily-wear positioning with no-pilling guarantee and primer-like benefits."
+    },
+    {
+      "name": "Skin Type Targeting",
+      "weight": 0.10,
+      "description": "Is suitability for specific skin types/concerns addressed (oily, sensitive, acne-prone)?",
+      "scoring_criteria": "0: No targeting. 5: 'All skin types'. 10: Specific type suitability with oil-control or sensitive-skin formulation details."
+    },
+    {
+      "name": "Environmental Claims",
+      "weight": 0.08,
+      "description": "Are reef-safe, ocean-friendly, or environmental impact claims made?",
+      "scoring_criteria": "0: No mention. 5: 'Reef-safe'. 10: Reef-safe with specific excluded ingredients (oxybenzone, octinoxate) and certification."
+    },
+    {
+      "name": "Clean Formulation",
+      "weight": 0.08,
+      "description": "Are fragrance-free, paraben-free, alcohol-free, non-comedogenic stated?",
+      "scoring_criteria": "0: None. 5: Some callouts. 10: Comprehensive clean formulation positioning."
+    },
+    {
+      "name": "Application & Reapplication",
+      "weight": 0.08,
+      "description": "Are application amount and reapplication guidance provided?",
+      "scoring_criteria": "0: No guidance. 5: Basic 'apply generously'. 10: Specific amount (2-finger rule), reapply every 2 hours, water-resistance duration."
+    },
+    {
+      "name": "Clinical & Dermatologist Backing",
+      "weight": 0.08,
+      "description": "Is dermatologist-tested, clinically proven, or clinical study referenced?",
+      "scoring_criteria": "0: None. 5: 'Dermatologist recommended'. 10: Specific clinical testing with protection verification."
+    },
+    {
+      "name": "Keyword Coverage",
+      "weight": 0.10,
+      "description": "Category-relevant search terms coverage.",
+      "scoring_criteria": "0: Minimal. 5: Moderate. 10: Comprehensive."
+    }
+  ]
+}

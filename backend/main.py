@@ -1,12 +1,12 @@
 """
-Sitescore API -- Multi-Agent Benchmarking Engine
+ListingIQ API — Multi-Agent Product Listing Optimization Engine
 FastAPI application with endpoints for the full pipeline and individual agents.
-Now powered by LangGraph with SSE streaming support.
+Powered by LangGraph with SSE streaming support.
 """
 import json as _json
 import logging
 import time
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from sse_starlette.sse import EventSourceResponse
@@ -16,7 +16,7 @@ from config import CORS_ORIGINS
 # ── Logging setup ─────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s │ %(levelname)-5s │ %(name)-28s │ %(message)s",
+    format="%(asctime)s │ %(levelname)-5s │ %(name)-35s │ %(message)s",
     datefmt="%H:%M:%S",
 )
 # Quiet down noisy third-party loggers
@@ -24,60 +24,42 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("openai").setLevel(logging.WARNING)
 logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
-log = logging.getLogger("sitescore.api")
+log = logging.getLogger("listingiq.api")
+
 from models.schemas import (
-    BrandInput,
+    ListingInput,
     FullPipelineRequest,
     FullPipelineResponse,
-    ImprovementRequest,
-    ImprovementSuggestion,
     FeedbackEntry,
     MemoryEntry,
-    DepthConfig,
     AgentNodeTrace,
     AgentTrace,
 )
 from agents.orchestrator import run_full_pipeline, get_compiled_graph
-from agents.competitor_analysis import analyze_competitors
-from agents.evaluation_dimensions import get_dimensions, generate_dimensions
-from agents.benchmark_generation import generate_benchmark
-from agents.evaluator_scoring import evaluate_all
-from agents.content_improvement import suggest_improvements
 from agents.feedback_memory import (
     record_feedback,
     get_memory_context,
     add_guideline,
     get_feedback_log,
 )
-from agents.depth_controller import determine_depth
 from scoring_history import record_score, get_score_history
+from data.rubrics.loader import get_available_subcategories
 
 
 # ── Agent trace builder ──────────────────────────────────────
-# Maps every possible node to its role and parent (which node it branches from)
 _AGENT_CATALOG = {
-    "depth_controller":        {"role": "meta",   "parent": ""},
-    "competitor_analysis":     {"role": "core",   "parent": "START"},
-    "dimensions":              {"role": "core",   "parent": "START"},
-    "memory":                  {"role": "core",   "parent": "START"},
-    "trend_sentiment":         {"role": "branch", "parent": "competitor_analysis"},
-    "brand_voice_profiler":    {"role": "branch", "parent": "competitor_analysis"},
-    "audience_resonance":      {"role": "branch", "parent": "competitor_analysis"},
-    "benchmark":               {"role": "core",   "parent": "competitor_analysis"},
-    "evaluator":               {"role": "core",   "parent": "benchmark"},
-    "creative_variants":       {"role": "branch", "parent": "benchmark"},
-    "linguistic_analysis":     {"role": "branch", "parent": "benchmark"},
-    "improvement":             {"role": "core",   "parent": "evaluator"},
-    "gap_analysis":            {"role": "branch", "parent": "evaluator"},
-    "competitive_positioning": {"role": "branch", "parent": "evaluator"},
-    "trend_projection":        {"role": "branch", "parent": "evaluator"},
-    "ab_test_generator":       {"role": "branch", "parent": "improvement"},
-    "implementation_roadmap":  {"role": "branch", "parent": "improvement"},
+    "input_parser":         {"role": "core", "parent": "START"},
+    "category_classifier":  {"role": "core", "parent": "input_parser"},
+    "competitor_scout":     {"role": "core", "parent": "category_classifier"},
+    "competitor_analyzer":  {"role": "core", "parent": "competitor_scout"},
+    "listing_analyzer":     {"role": "core", "parent": "competitor_analyzer"},
+    "benchmark_scorer":     {"role": "core", "parent": "listing_analyzer"},
+    "recommendation_engine": {"role": "core", "parent": "benchmark_scorer"},
+    "rewrite_generator":    {"role": "core", "parent": "recommendation_engine"},
 }
 
 
 def _build_agent_trace(
-    depth: DepthConfig,
     executed_nodes: list[str],
     node_timings: dict[str, float],
     total_ms: float,
@@ -96,9 +78,6 @@ def _build_agent_trace(
     completed = sum(1 for n in nodes if n.status == "completed")
     skipped = sum(1 for n in nodes if n.status == "skipped")
     return AgentTrace(
-        depth_level=depth.depth_level if depth else "standard",
-        depth_reasoning=depth.reasoning if depth else "",
-        enable_trends=depth.enable_trends if depth else True,
         total_duration_ms=total_ms,
         nodes_executed=completed,
         nodes_skipped=skipped,
@@ -108,14 +87,14 @@ def _build_agent_trace(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    log.info("Sitescore Engine started — LangGraph pipeline ready")
+    log.info("ListingIQ Engine started — 8-agent LangGraph pipeline ready")
     yield
-    log.info("Sitescore Engine stopped")
+    log.info("ListingIQ Engine stopped")
 
 
 app = FastAPI(
-    title="Sitescore",
-    description="Multi-Dimensional, Multi-Agent Benchmarking Engine for Marketing Content",
+    title="ListingIQ",
+    description="Multi-Agent Product Listing Optimization Engine",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -132,108 +111,69 @@ app.add_middleware(
 # -- Health Check --
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "engine": "sitescore", "version": "1.0.0"}
+    return {"status": "healthy", "engine": "listingiq", "version": "1.0.0"}
 
 
 # -- Full Pipeline --
 @app.post("/api/pipeline", response_model=FullPipelineResponse)
 async def pipeline(request: FullPipelineRequest):
-    """Execute the complete Sitescore multi-agent pipeline."""
+    """Execute the complete ListingIQ 8-agent pipeline."""
     try:
         t0 = time.perf_counter()
-        # Auto-assign depth if not provided
-        depth = request.depth_config
-        if depth is None:
-            depth = await determine_depth(request.brand_input)
         result = await run_full_pipeline(
-            brand_input=request.brand_input,
-            custom_dimensions=request.custom_dimensions,
+            listing_input=request.listing_input,
             session_id=request.session_id,
-            depth_config=depth,
         )
         total_ms = (time.perf_counter() - t0) * 1000
-        # Build agent trace (no per-node timing for non-streaming endpoint)
-        executed = ["depth_controller", "competitor_analysis", "dimensions", "memory", "benchmark", "evaluator", "improvement"]
-        if result.trend_data:
-            executed.append("trend_sentiment")
-        if result.brand_voice_data:
-            executed.append("brand_voice_profiler")
-        if result.audience_resonance_data:
-            executed.append("audience_resonance")
-        if result.creative_variants_data:
-            executed.append("creative_variants")
-        if result.linguistic_data:
-            executed.append("linguistic_analysis")
-        if result.gap_analysis_data:
-            executed.append("gap_analysis")
-        if result.positioning_data:
-            executed.append("competitive_positioning")
-        if result.trend_projection_data:
-            executed.append("trend_projection")
-        if result.ab_test_data:
-            executed.append("ab_test_generator")
-        if result.roadmap_data:
-            executed.append("implementation_roadmap")
-        result.agent_trace = _build_agent_trace(depth, executed, {}, total_ms)
-        # Record score to history for trend projection
+        executed = list(_AGENT_CATALOG.keys())
+        result.agent_trace = _build_agent_trace(executed, {}, total_ms)
+
+        # Record score to history
         try:
             await record_score(
-                brand_name=request.brand_input.brand_name,
+                brand_name=request.listing_input.brand_name or "Unknown",
                 session_id=request.session_id,
-                tagline=request.brand_input.current_tagline,
-                overall_score=result.evaluation.user_score.overall_score,
-                dimension_scores=[ds.model_dump() for ds in result.evaluation.user_score.dimension_scores],
-                competitor_scores=[{"brand": cs.brand_name, "score": cs.overall_score} for cs in result.evaluation.competitor_scores],
-                depth_level=depth.depth_level if depth else "standard",
+                product_title=request.listing_input.product_title,
+                overall_score=result.scores.overall_score,
+                dimension_scores=[ds.model_dump() for ds in result.scores.dimension_scores],
+                subcategory=result.category.subcategory,
             )
         except Exception as ex:
             log.warning("Failed to record score history: %s", ex)
+
         return result
     except Exception as e:
+        log.error("Pipeline error: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
 # -- SSE Streaming Pipeline --
 @app.post("/api/pipeline/stream")
 async def pipeline_stream(request: FullPipelineRequest):
-    """Stream pipeline progress via Server-Sent Events.
-    Each node completion emits an SSE event with the node name.
-    The final event contains the full result payload.
-    """
+    """Stream pipeline progress via Server-Sent Events."""
 
     async def event_generator():
-        # Auto-assign depth if not provided
-        depth = request.depth_config
-        if depth is None:
-            depth = await determine_depth(request.brand_input)
-            yield {
-                "event": "depth_assigned",
-                "data": _json.dumps({"depth_level": depth.depth_level, "enable_trends": depth.enable_trends, "reasoning": depth.reasoning}),
-            }
-
         graph = get_compiled_graph()
         initial_state = {
-            "brand_input": request.brand_input,
-            "custom_dimensions": request.custom_dimensions,
+            "listing_input": request.listing_input,
             "session_id": request.session_id,
-            "depth_config": depth,
         }
         config = {"configurable": {"thread_id": request.session_id + "_stream"}}
 
-        brand_name = request.brand_input.brand_name if hasattr(request.brand_input, "brand_name") else request.brand_input.get("brand_name", "?")
-        log.info("▶ SSE pipeline START  brand=%s  session=%s", brand_name, request.session_id)
+        title = request.listing_input.product_title if hasattr(request.listing_input, "product_title") else request.listing_input.get("product_title", "?")
+        log.info("▶ SSE pipeline START  title='%s'  session=%s", title[:60], request.session_id)
         pipeline_t0 = time.perf_counter()
 
         accumulated = {}
-        executed_nodes: list[str] = ["depth_controller"]  # always runs first
+        executed_nodes: list[str] = []
         node_timings: dict[str, float] = {}
         graph_error = None
         node_t0 = time.perf_counter()
+
         try:
             async for event in graph.astream(
                 initial_state, config=config, stream_mode="updates"
             ):
-                # event shape: {"node_name": {"key": value, ...}}
                 for node_name, node_output in event.items():
                     if node_name == "__start__":
                         node_t0 = time.perf_counter()
@@ -262,38 +202,34 @@ async def pipeline_stream(request: FullPipelineRequest):
         # Build the final response from accumulated node outputs
         try:
             response = FullPipelineResponse(
-                competitors=accumulated["competitor_result"],
-                evaluation=accumulated["evaluation"],
-                suggestions=accumulated["suggestions"],
-                memory_context=accumulated.get("memory_context", []),
-                trend_data=accumulated.get("trend_data"),
-                brand_voice_data=accumulated.get("brand_voice_data"),
-                audience_resonance_data=accumulated.get("audience_resonance_data"),
-                creative_variants_data=accumulated.get("creative_variants_data"),
-                linguistic_data=accumulated.get("linguistic_data"),
-                gap_analysis_data=accumulated.get("gap_analysis_data"),
-                positioning_data=accumulated.get("positioning_data"),
-                ab_test_data=accumulated.get("ab_test_data"),
-                roadmap_data=accumulated.get("roadmap_data"),
-                trend_projection_data=accumulated.get("trend_projection_data"),
+                parsed_listing=accumulated["parsed_listing"],
+                category=accumulated["category"],
+                rubric=accumulated["rubric"],
+                competitors=accumulated["competitor_scout_result"],
+                competitor_analysis=accumulated["competitor_analysis"],
+                listing_analysis=accumulated["listing_analysis"],
+                scores=accumulated["scores"],
+                recommendations=accumulated["recommendations"],
+                rewrites=accumulated["rewrites"],
             )
             elapsed = time.perf_counter() - pipeline_t0
             total_ms = elapsed * 1000
-            response.agent_trace = _build_agent_trace(depth, executed_nodes, node_timings, total_ms)
-            log.info("◀ SSE pipeline DONE   brand=%s  %.1fs  nodes=%d  keys=%s", brand_name, elapsed, len(executed_nodes), list(accumulated.keys()))
-            # Record score to history for trend projection
+            response.agent_trace = _build_agent_trace(executed_nodes, node_timings, total_ms)
+            log.info("◀ SSE pipeline DONE   %.1fs  nodes=%d  keys=%s", elapsed, len(executed_nodes), list(accumulated.keys()))
+
+            # Record score to history
             try:
                 await record_score(
-                    brand_name=brand_name,
+                    brand_name=request.listing_input.brand_name if hasattr(request.listing_input, "brand_name") else request.listing_input.get("brand_name", "Unknown"),
                     session_id=request.session_id,
-                    tagline=request.brand_input.current_tagline if hasattr(request.brand_input, "current_tagline") else request.brand_input.get("current_tagline", ""),
-                    overall_score=response.evaluation.user_score.overall_score,
-                    dimension_scores=[ds.model_dump() for ds in response.evaluation.user_score.dimension_scores],
-                    competitor_scores=[{"brand": cs.brand_name, "score": cs.overall_score} for cs in response.evaluation.competitor_scores],
-                    depth_level=depth.depth_level if depth else "standard",
+                    product_title=title,
+                    overall_score=response.scores.overall_score,
+                    dimension_scores=[ds.model_dump() for ds in response.scores.dimension_scores],
+                    subcategory=response.category.subcategory,
                 )
             except Exception as ex:
                 log.warning("Failed to record SSE score history: %s", ex)
+
             yield {
                 "event": "result",
                 "data": response.model_dump_json(),
@@ -308,50 +244,11 @@ async def pipeline_stream(request: FullPipelineRequest):
     return EventSourceResponse(event_generator())
 
 
-# -- Individual Agent Endpoints --
-@app.post("/api/competitors")
-async def get_competitors(brand_input: BrandInput):
-    """Run only the competitor analysis agent."""
-    result = await analyze_competitors(brand_input)
-    return result
-
-
-@app.post("/api/evaluate")
-async def evaluate(request: FullPipelineRequest):
-    """Run competitor analysis + evaluation in one call."""
-    dimensions = await generate_dimensions(
-        request.brand_input.brand_name,
-        request.brand_input.product_category,
-        request.brand_input.target_audience,
-    )
-    if request.custom_dimensions:
-        dim_map = {d.name: d for d in dimensions}
-        for cd in request.custom_dimensions:
-            dim_map[cd.name] = cd
-        dimensions = list(dim_map.values())
-    competitor_result = await analyze_competitors(request.brand_input)
-    bench = await generate_benchmark(
-        request.brand_input, competitor_result.competitors, dimensions
-    )
-    evaluation = await evaluate_all(
-        request.brand_input, competitor_result.competitors, dimensions, bench
-    )
-    return evaluation
-
-
-@app.post("/api/improve", response_model=list[ImprovementSuggestion])
-async def improve(request: ImprovementRequest):
-    """Get targeted improvement suggestions for a specific dimension."""
-    if not request.current_evaluation:
-        raise HTTPException(status_code=400, detail="current_evaluation is required")
-    memory = get_memory_context(request.brand_input.brand_name)
-    result = await suggest_improvements(
-        request.brand_input,
-        request.current_evaluation,
-        target_dimension=request.target_dimension,
-        memory_context=memory,
-    )
-    return result
+# -- Rubric Catalog --
+@app.get("/api/rubrics")
+async def list_rubrics():
+    """List available pre-built scoring rubrics."""
+    return {"subcategories": get_available_subcategories()}
 
 
 # -- Feedback & Memory --
@@ -382,11 +279,10 @@ async def feedback_log(brand_name: str | None = None):
 # -- Scoring History --
 @app.get("/api/history/{brand_name}")
 async def scoring_history(brand_name: str, limit: int = 20):
-    """Retrieve scoring history for a brand (for trend projection)."""
+    """Retrieve scoring history for a brand."""
     return await get_score_history(brand_name, limit=limit)
 
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

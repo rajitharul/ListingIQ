@@ -1,0 +1,68 @@
+{
+  "vertical": "Supplements & Nutraceuticals",
+  "category": "Beauty & Joint Health",
+  "subcategory": "Collagen Peptides",
+  "version": "1.0",
+  "dimensions": [
+    {
+      "name": "Collagen Type & Source",
+      "weight": 0.15,
+      "description": "Is the collagen type (I, II, III) and source (bovine, marine, chicken) specified?",
+      "scoring_criteria": "0: No type/source. 3: 'Collagen' only. 5: Type or source mentioned. 7: Both type and source with explanation. 10: Full type/source breakdown with why specific types matter (I+III for skin, II for joints)."
+    },
+    {
+      "name": "Molecular Weight & Hydrolysis",
+      "weight": 0.10,
+      "description": "Is hydrolyzed/peptide form explained with molecular weight or Dalton info?",
+      "scoring_criteria": "0: No mention. 3: 'Collagen peptides'. 5: 'Hydrolyzed' stated. 7: Hydrolysis benefit explained. 10: Molecular weight/Dalton data with bioavailability advantage of peptides vs gelatin."
+    },
+    {
+      "name": "Dosage & Serving",
+      "weight": 0.12,
+      "description": "Is per-serving collagen grams, scoop size, and servings per container clear?",
+      "scoring_criteria": "0: No dosage. 3: Total weight only. 5: Per-scoop grams. 7: Per-scoop + servings. 10: Full dosage with clinical dose context (10-20g studied doses)."
+    },
+    {
+      "name": "Dissolving & Taste",
+      "weight": 0.08,
+      "description": "Is dissolving quality, taste/smell profile, and mixing versatility communicated?",
+      "scoring_criteria": "0: No mention. 5: 'Unflavored' or 'dissolves easily'. 10: Taste-free, odor-free, hot/cold mixing, tested in multiple beverages."
+    },
+    {
+      "name": "Benefit Positioning",
+      "weight": 0.14,
+      "description": "Are specific outcomes positioned (skin elasticity, hair growth, nail strength, joint support)?",
+      "scoring_criteria": "0: No benefits. 3: Generic 'beauty'. 5: 1-2 benefits. 7: Multi-benefit (skin + hair + nails + joints). 10: Specific outcomes with timeline expectations and audience segmentation."
+    },
+    {
+      "name": "Clinical Backing",
+      "weight": 0.08,
+      "description": "Are clinical studies or research references mentioned?",
+      "scoring_criteria": "0: None. 5: 'Scientifically formulated'. 10: Named studies with outcomes (e.g. 'shown to improve skin elasticity in 8 weeks')."
+    },
+    {
+      "name": "Allergen & Dietary Callouts",
+      "weight": 0.08,
+      "description": "Are grass-fed, pasture-raised, non-GMO, gluten-free, hormone-free stated?",
+      "scoring_criteria": "0: None. 5: Some callouts. 10: Comprehensive sourcing ethics + dietary status."
+    },
+    {
+      "name": "Third-Party Testing",
+      "weight": 0.10,
+      "description": "Are third-party testing, heavy metal testing, purity certifications mentioned?",
+      "scoring_criteria": "0: None. 5: Basic claim. 10: Multiple certifications + heavy metal/contaminant testing."
+    },
+    {
+      "name": "Keyword Coverage",
+      "weight": 0.08,
+      "description": "Does the listing include category-relevant search terms?",
+      "scoring_criteria": "0: Minimal. 5: Moderate. 10: Comprehensive."
+    },
+    {
+      "name": "Trust Signals",
+      "weight": 0.07,
+      "description": "Are GMP, made in USA, satisfaction guarantee, brand story present?",
+      "scoring_criteria": "0: None. 5: Basic. 10: Comprehensive trust framework."
+    }
+  ]
+}

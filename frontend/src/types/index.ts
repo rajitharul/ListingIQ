@@ -1,138 +1,193 @@
-// -- Core Types matching backend schemas --
+// -- ListingIQ Core Types matching backend schemas --
 
-export interface BrandInput {
+export interface ListingInput {
+  product_title: string;
+  product_description: string;
+  bullet_points: string[];
   brand_name: string;
-  product_category: string;
-  current_tagline: string;
-  current_description: string;
+  platform: "amazon" | "shopify" | "daraz" | "generic";
   target_audience: string;
 }
 
-export interface Competitor {
-  name: string;
-  product: string;
-  tagline: string;
-  description: string;
-  market_position: string;
+// Agent 1: Input Parser
+export interface ExtractedEntities {
+  product_type: string;
+  ingredients: string[];
+  certifications: string[];
+  dosage_info: string;
+  target_audience: string;
+  claims: string[];
+  format_type: string;
 }
 
-export interface Dimension {
+export interface ParsedListing {
+  original_title: string;
+  original_description: string;
+  original_bullets: string[];
+  brand_name: string;
+  platform: string;
+  extracted_entities: ExtractedEntities;
+}
+
+// Agent 2: Category Classifier
+export interface CategoryClassification {
+  vertical: string;
+  category: string;
+  subcategory: string;
+  confidence: number;
+  reasoning: string;
+}
+
+export interface RubricDimension {
   name: string;
-  description: string;
   weight: number;
+  description: string;
+  scoring_criteria: string;
 }
 
+export interface ScoringRubric {
+  subcategory: string;
+  dimensions: RubricDimension[];
+  version: string;
+}
+
+// Agent 3: Competitor Scout
+export interface CompetitorListing {
+  rank: number;
+  title: string;
+  description: string;
+  bullet_points: string[];
+  brand_name: string;
+  price: string;
+  rating: number;
+  review_count: number;
+  badges: string[];
+  url: string;
+}
+
+export interface CompetitorScoutResult {
+  listings: CompetitorListing[];
+  search_query: string;
+  platform: string;
+  data_source: string;
+}
+
+// Agent 4: Competitor Analyzer
+export interface KeywordPattern {
+  keyword: string;
+  frequency: number;
+  position: string;
+}
+
+export interface ClaimPattern {
+  claim: string;
+  frequency: number;
+  example_brand: string;
+}
+
+export interface CompetitorAnalysis {
+  keyword_patterns: KeywordPattern[];
+  claim_patterns: ClaimPattern[];
+  trust_signals: { signal: string; frequency: number }[];
+  structural_patterns: Record<string, unknown>;
+  differentiation_insights: string[];
+  summary: string;
+}
+
+// Agent 5: Listing Analyzer
+export interface DimensionExtraction {
+  dimension_name: string;
+  present: boolean;
+  extracted_value: string;
+  evidence: string;
+  completeness: number;
+}
+
+export interface ListingAnalysis {
+  dimensions: DimensionExtraction[];
+  overall_completeness: number;
+  missing_dimensions: string[];
+  present_dimensions: string[];
+}
+
+// Agent 6: Benchmark Scorer
 export interface DimensionScore {
   dimension: string;
+  weight: number;
   score: number;
   explanation: string;
+  competitor_avg: number;
+  gap: number;
   strengths: string[];
   weaknesses: string[];
 }
 
-export interface ContentScore {
-  brand_name: string;
-  tagline: string;
-  dimension_scores: DimensionScore[];
+export interface ListingScore {
   overall_score: number;
-  rank: number;
-}
-
-export interface BenchmarkSnippet {
-  ideal_tagline: string;
-  ideal_description: string;
-  rationale: string;
   dimension_scores: DimensionScore[];
+  percentile: number;
+  gap_analysis: {
+    dimension: string;
+    score: number;
+    competitor_avg: number;
+    gap: number;
+    weight: number;
+    impact: number;
+  }[];
 }
 
-export interface ImprovementSuggestion {
-  target_dimension: string;
+// Agent 7: Recommendation Engine
+export interface Recommendation {
+  priority: number;
+  dimension: string;
   current_score: number;
   projected_score: number;
-  original_text: string;
-  improved_text: string;
-  changes_made: string[];
-  trade_offs: string[];
+  impact: "high" | "medium" | "low";
+  specific_copy: string;
+  competitive_evidence: string;
+  expected_lift: string;
 }
 
-export interface CompetitorAnalysisResult {
-  competitors: Competitor[];
-  market_summary: string;
+export interface RecommendationResult {
+  recommendations: Recommendation[];
+  quick_wins: Recommendation[];
+  strategic_moves: Recommendation[];
 }
 
-export interface EvaluationResult {
-  user_score: ContentScore;
-  competitor_scores: ContentScore[];
-  benchmark: BenchmarkSnippet;
-  dimensions: Dimension[];
-  rankings: { brand: string; score: number; rank: number }[];
-  insights: string[];
+// Agent 8: Rewrite Generator
+export interface ListingRewrite {
+  variant_name: string;
+  strategy: string;
+  title: string;
+  bullet_points: string[];
+  description: string;
+  expected_score: number;
+  key_changes: string[];
 }
 
-export interface CompetitorTrend {
-  competitor_name: string;
-  search_interest: number;
-  trend_direction: "rising" | "declining" | "stable";
-  recent_headlines: string[];
-  sentiment_score: number;
+export interface RewriteResult {
+  variants: ListingRewrite[];
+  original_score: number;
+  best_variant_score: number;
 }
 
-export interface TrendAnalysisResult {
-  brand_trend: CompetitorTrend;
-  competitor_trends: CompetitorTrend[];
-  market_momentum: string;
-  opportunities: string[];
-  threats: string[];
-}
-
-export interface DepthConfig {
-  enable_trends: boolean;
-  depth_level: "quick" | "standard" | "deep";
-  reasoning?: string;
-}
-
+// Agent Trace
 export interface AgentNodeTrace {
   name: string;
-  role: "core" | "branch" | "meta";
+  role: string;
   status: "completed" | "skipped";
   duration_ms: number;
   parent: string;
 }
 
 export interface AgentTrace {
-  depth_level: string;
-  depth_reasoning: string;
-  enable_trends: boolean;
   total_duration_ms: number;
   nodes_executed: number;
   nodes_skipped: number;
   nodes: AgentNodeTrace[];
 }
 
-export interface FullPipelineResponse {
-  competitors: CompetitorAnalysisResult;
-  evaluation: EvaluationResult;
-  suggestions: ImprovementSuggestion[];
-  memory_context: {
-    brand_name: string;
-    guideline: string;
-    source: string;
-    confidence: number;
-  }[];
-  trend_data?: TrendAnalysisResult | null;
-  // Branch agent outputs (deep mode)
-  brand_voice_data?: Record<string, unknown> | null;
-  audience_resonance_data?: Record<string, unknown> | null;
-  creative_variants_data?: Record<string, unknown> | null;
-  linguistic_data?: Record<string, unknown> | null;
-  gap_analysis_data?: Record<string, unknown> | null;
-  positioning_data?: Record<string, unknown> | null;
-  ab_test_data?: Record<string, unknown> | null;
-  roadmap_data?: Record<string, unknown> | null;
-  trend_projection_data?: Record<string, unknown> | null;
-  agent_trace?: AgentTrace | null;
-}
-
+// Feedback
 export interface FeedbackEntry {
   session_id: string;
   brand_name: string;
@@ -141,4 +196,25 @@ export interface FeedbackEntry {
   suggested_content?: string;
   user_comment?: string;
   dimension?: string;
+}
+
+export interface MemoryEntry {
+  brand_name: string;
+  guideline: string;
+  source: string;
+  confidence: number;
+}
+
+// Pipeline
+export interface FullPipelineResponse {
+  parsed_listing: ParsedListing;
+  category: CategoryClassification;
+  rubric: ScoringRubric;
+  competitors: CompetitorScoutResult;
+  competitor_analysis: CompetitorAnalysis;
+  listing_analysis: ListingAnalysis;
+  scores: ListingScore;
+  recommendations: RecommendationResult;
+  rewrites: RewriteResult;
+  agent_trace?: AgentTrace | null;
 }

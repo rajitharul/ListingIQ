@@ -1,92 +1,47 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 const PIPELINE_STEPS = [
   {
-    agent: "Depth Controller",
-    description: "Analysing brand complexity to determine optimal pipeline depth...",
-    nodeKey: "depth_controller",
+    agent: "Input Parser",
+    description: "Extracting entities, ingredients, certifications, and claims from your listing...",
+    nodeKey: "input_parser",
   },
   {
-    agent: "Competitor Analysis Agent",
-    description: "Mapping market landscape and retrieving top competitors...",
-    nodeKey: "competitor_analysis",
+    agent: "Category Classifier",
+    description: "Identifying product vertical, category, and loading scoring rubric...",
+    nodeKey: "category_classifier",
   },
   {
-    agent: "Evaluation Dimension Agent",
-    description: "Establishing scoring matrix across dimensions...",
-    nodeKey: "dimensions",
+    agent: "Competitor Scout",
+    description: "Researching top 10 competitor listings in your subcategory...",
+    nodeKey: "competitor_scout",
   },
   {
-    agent: "Feedback & Memory Agent",
-    description: "Integrating cached guidelines and preferences...",
-    nodeKey: "memory",
+    agent: "Listing Analyzer",
+    description: "Evaluating your listing against each rubric dimension...",
+    nodeKey: "listing_analyzer",
   },
   {
-    agent: "Trend & Sentiment Agent",
-    description: "Gathering real-time market trends and news sentiment...",
-    nodeKey: "trend_sentiment",
+    agent: "Competitor Analyzer",
+    description: "Extracting keyword patterns, claim frequency, and trust signals...",
+    nodeKey: "competitor_analyzer",
   },
   {
-    agent: "Brand Voice Profiler",
-    description: "Profiling brand voice and tone across competitors...",
-    nodeKey: "brand_voice_profiler",
+    agent: "Benchmark Scorer",
+    description: "Scoring your listing per dimension against competitor benchmarks...",
+    nodeKey: "benchmark_scorer",
   },
   {
-    agent: "Audience Resonance Agent",
-    description: "Mapping message-audience fit and emotional triggers...",
-    nodeKey: "audience_resonance",
+    agent: "Recommendation Engine",
+    description: "Generating prioritized improvements with specific copy suggestions...",
+    nodeKey: "recommendation_engine",
   },
   {
-    agent: "Benchmark Generation Agent",
-    description: "Generating the ideal 10/10 benchmark tagline...",
-    nodeKey: "benchmark",
-  },
-  {
-    agent: "Creative Variants Agent",
-    description: "Generating alternative creative approaches...",
-    nodeKey: "creative_variants",
-  },
-  {
-    agent: "Linguistic Analysis Agent",
-    description: "Analysing phonetics, rhythm, and rhetorical devices...",
-    nodeKey: "linguistic_analysis",
-  },
-  {
-    agent: "Evaluator Scoring Agent",
-    description: "Computing numerical scores across all brands...",
-    nodeKey: "evaluator",
-  },
-  {
-    agent: "Gap Analysis Agent",
-    description: "Identifying competitive score gaps and quick wins...",
-    nodeKey: "gap_analysis",
-  },
-  {
-    agent: "Competitive Positioning Agent",
-    description: "Mapping the positioning landscape and whitespace...",
-    nodeKey: "competitive_positioning",
-  },
-  {
-    agent: "Trend Projection Agent",
-    description: "Analysing historical scores to project future trends...",
-    nodeKey: "trend_projection",
-  },
-  {
-    agent: "Content Improvement Agent",
-    description: "Generating targeted micro-improvements...",
-    nodeKey: "improvement",
-  },
-  {
-    agent: "A/B Test Generator",
-    description: "Creating structured A/B test plans...",
-    nodeKey: "ab_test_generator",
-  },
-  {
-    agent: "Implementation Roadmap",
-    description: "Building a phased rollout plan...",
-    nodeKey: "implementation_roadmap",
+    agent: "Rewrite Generator",
+    description: "Creating 3 optimized listing variants — keyword, benefit-led, trust-forward...",
+    nodeKey: "rewrite_generator",
   },
 ];
 
@@ -99,7 +54,6 @@ export default function LoadingOverlay({ isVisible, completedNodes = [] }: Props
   const [fallbackStep, setFallbackStep] = useState(0);
   const isStreaming = completedNodes.length > 0;
 
-  // Fallback timer when not receiving SSE events
   useEffect(() => {
     if (!isVisible || isStreaming) {
       setFallbackStep(0);
@@ -109,22 +63,19 @@ export default function LoadingOverlay({ isVisible, completedNodes = [] }: Props
       setFallbackStep((prev) =>
         prev < PIPELINE_STEPS.length - 1 ? prev + 1 : prev
       );
-    }, 3500);
+    }, 4000);
     return () => clearInterval(interval);
   }, [isVisible, isStreaming]);
 
-  // Determine step status based on completedNodes or fallback
   const getStepStatus = (index: number): "done" | "active" | "pending" => {
     if (isStreaming) {
       const step = PIPELINE_STEPS[index];
       if (completedNodes.includes(step.nodeKey)) return "done";
-      // The first non-done step is active
       const firstPending = PIPELINE_STEPS.findIndex(
         (s) => !completedNodes.includes(s.nodeKey)
       );
       return index === firstPending ? "active" : "pending";
     }
-    // Fallback mode
     if (index < fallbackStep) return "done";
     if (index === fallbackStep) return "active";
     return "pending";
@@ -136,7 +87,7 @@ export default function LoadingOverlay({ isVisible, completedNodes = [] }: Props
     <div className="fixed inset-0 z-50 bg-white/90 backdrop-blur-sm flex items-center justify-center">
       <div className="glass-card pulse-glow p-10 max-w-lg w-full mx-4">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-500 flex items-center justify-center">
             <svg
               className="animate-spin h-8 w-8 text-white"
               viewBox="0 0 24 24"
@@ -157,9 +108,9 @@ export default function LoadingOverlay({ isVisible, completedNodes = [] }: Props
               />
             </svg>
           </div>
-          <h2 className="text-xl font-bold">Multi-Agent Pipeline Running</h2>
+          <h2 className="text-xl font-bold">8-Agent Pipeline Running</h2>
           <p className="text-sm text-[var(--text-muted)] mt-1">
-            Up to 16 specialized AI agents working in concert
+            8 specialized AI agents analyzing your product listing
           </p>
         </div>
 

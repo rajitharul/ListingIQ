@@ -6,6 +6,7 @@ Also provides a logged wrapper so every LLM call is visible in the terminal.
 import logging
 import time
 from openai import AsyncOpenAI
+from langsmith.wrappers import wrap_openai
 from config import OPENAI_API_KEY
 
 log = logging.getLogger("sitescore.llm")
@@ -17,7 +18,10 @@ _client: AsyncOpenAI | None = None
 def get_openai_client() -> AsyncOpenAI:
     global _client
     if _client is None:
-        _client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+        # wrap_openai instruments the client so every call appears as an LLM
+        # span in LangSmith (prompts, completions, token usage) nested under
+        # the LangGraph node that made it. No-op when tracing is disabled.
+        _client = wrap_openai(AsyncOpenAI(api_key=OPENAI_API_KEY))
         log.info("AsyncOpenAI client initialised")
     return _client
 

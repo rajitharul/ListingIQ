@@ -1,0 +1,68 @@
+{
+  "vertical": "Beauty & Cosmetics",
+  "category": "Skincare",
+  "subcategory": "Retinol Serum",
+  "version": "1.0",
+  "dimensions": [
+    {
+      "name": "Retinoid Type & Strength",
+      "weight": 0.15,
+      "description": "Is the retinoid type (retinol, retinal, retinyl palmitate) and percentage specified?",
+      "scoring_criteria": "0: No type/strength. 3: 'Retinol'. 5: Type named. 7: Type + percentage. 10: Type + percentage + potency comparison and where it sits on the retinoid ladder."
+    },
+    {
+      "name": "Beginner-Friendliness",
+      "weight": 0.12,
+      "description": "Is the formula positioned for beginners (buffered, encapsulated, gradual-release)?",
+      "scoring_criteria": "0: No guidance. 3: 'Gentle formula'. 5: Buffered/encapsulated mentioned. 7: Specific tolerance-building protocol. 10: Full beginner guide with start-low approach and purging timeline."
+    },
+    {
+      "name": "Purging & Sensitivity Warnings",
+      "weight": 0.10,
+      "description": "Are purging warnings, sensitivity management, and adjustment period addressed?",
+      "scoring_criteria": "0: No warnings. 3: 'May cause sensitivity'. 5: Purging mentioned. 7: Purging timeline and management tips. 10: Comprehensive purging guide with when-to-stop-use guidance."
+    },
+    {
+      "name": "Complementary Ingredients",
+      "weight": 0.10,
+      "description": "Are soothing/hydrating ingredients included (hyaluronic acid, niacinamide, squalane, ceramides)?",
+      "scoring_criteria": "0: No mention. 3: One ingredient. 5: 2-3 supporting ingredients. 7: Explained why they offset retinol irritation. 10: Full complementary formula rationale with each ingredient's role."
+    },
+    {
+      "name": "Usage Instructions",
+      "weight": 0.10,
+      "description": "Are application instructions clear (PM only, frequency, how to layer, SPF reminder)?",
+      "scoring_criteria": "0: No instructions. 3: 'Apply to face'. 5: PM use mentioned. 7: Frequency + layering + SPF. 10: Full protocol with frequency ramp-up and product pairing dos/don'ts."
+    },
+    {
+      "name": "Packaging & Stability",
+      "weight": 0.08,
+      "description": "Is packaging mentioned (airless pump, opaque bottle, UV protection) for retinol stability?",
+      "scoring_criteria": "0: No mention. 3: Basic packaging. 5: 'Protective packaging'. 7: Airless pump or opaque bottle noted. 10: Stability-focused packaging with light/air protection explained."
+    },
+    {
+      "name": "Outcome Specificity",
+      "weight": 0.10,
+      "description": "Are specific anti-aging outcomes targeted (fine lines, wrinkles, texture, tone, pores)?",
+      "scoring_criteria": "0: Generic 'anti-aging'. 3: One outcome. 5: 2-3 outcomes. 7: Multiple with specificity. 10: Targeted outcomes with expected timeline."
+    },
+    {
+      "name": "Certifications",
+      "weight": 0.08,
+      "description": "Are cruelty-free, vegan, paraben-free, fragrance-free, dermatologist-tested stated?",
+      "scoring_criteria": "0: None. 5: Some. 10: Comprehensive clean beauty certification suite."
+    },
+    {
+      "name": "Keyword Coverage",
+      "weight": 0.10,
+      "description": "Category-relevant search terms coverage.",
+      "scoring_criteria": "0: Minimal. 5: Moderate. 10: Comprehensive."
+    },
+    {
+      "name": "Trust Signals",
+      "weight": 0.07,
+      "description": "Are dermatologist-formulated, clinically tested, brand reputation signals present?",
+      "scoring_criteria": "0: None. 5: Basic. 10: Comprehensive."
+    }
+  ]
+}

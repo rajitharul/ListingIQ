@@ -7,7 +7,6 @@ interface Props {
   trace: AgentTrace;
 }
 
-// ── Layout & metadata for each node ─────────────────────────────
 interface NodeLayout {
   label: string;
   x: number;
@@ -16,72 +15,39 @@ interface NodeLayout {
 }
 
 const NODE_META: Record<string, NodeLayout> = {
-  depth_controller:        { label: "Depth Controller",        x: 400, y: 30,   description: "GPT-4o meta-agent — analyses brand input to auto-assign pipeline depth" },
-  competitor_analysis:     { label: "Competitor Analysis",     x: 200, y: 120,  description: "Discovers and profiles competing brands via LLM research" },
-  dimensions:              { label: "Dimensions",              x: 400, y: 120,  description: "Generates scoring dimensions tailored to category & audience" },
-  memory:                  { label: "Memory",                  x: 600, y: 120,  description: "Retrieves brand guidelines and past feedback from memory" },
-  trend_sentiment:         { label: "Trend & Sentiment",       x: 60,  y: 220,  description: "Google Trends + NewsAPI — market momentum & competitor tracking" },
-  brand_voice_profiler:    { label: "Brand Voice",             x: 200, y: 220,  description: "Profiles voice archetype, tone, and messaging strategy" },
-  audience_resonance:      { label: "Audience Resonance",      x: 340, y: 220,  description: "Maps audience alignment and emotional triggers" },
-  benchmark:               { label: "Benchmark Generation",    x: 400, y: 320,  description: "Generates ideal benchmark tagline from competitor + trend context" },
-  creative_variants:       { label: "Creative Variants",       x: 200, y: 420,  description: "Generates 4 alternative tagline approaches" },
-  linguistic_analysis:     { label: "Linguistic Analysis",     x: 600, y: 420,  description: "Phonetics, rhythm, rhetorical devices & memorability scoring" },
-  evaluator:               { label: "Evaluator Scoring",       x: 400, y: 420,  description: "Multi-dimensional scoring of brand vs competitors vs benchmark" },
-  gap_analysis:            { label: "Gap Analysis",            x: 160, y: 520,  description: "Identifies score gaps, quick wins, and strategic moats" },
-  competitive_positioning: { label: "Positioning Map",         x: 340, y: 520,  description: "Positioning map with whitespace opportunities" },
-  trend_projection:        { label: "Trend Projection",       x: 520, y: 520,  description: "Historical score trajectory analysis & next-score prediction" },
-  improvement:             { label: "Content Improvement",     x: 400, y: 620,  description: "Generates dimension-targeted improvement suggestions" },
-  ab_test_generator:       { label: "A/B Test Plans",          x: 280, y: 720,  description: "Structured A/B test plans with hypotheses & expected lift" },
-  implementation_roadmap:  { label: "Roadmap",                 x: 520, y: 720,  description: "Phased rollout plan with actions & timeline" },
+  input_parser:          { label: "Input Parser",          x: 400, y: 60,   description: "Extracts entities, ingredients, certifications, and claims from your listing" },
+  category_classifier:   { label: "Category Classifier",   x: 400, y: 150,  description: "Identifies product vertical and subcategory, loads scoring rubric" },
+  competitor_scout:      { label: "Competitor Scout",      x: 400, y: 240,  description: "Researches top 10 competitor listings in the subcategory" },
+  competitor_analyzer:   { label: "Competitor Analyzer",   x: 400, y: 330,  description: "Extracts keyword patterns, claim frequency, trust signals from competitors" },
+  listing_analyzer:      { label: "Listing Analyzer",      x: 400, y: 420,  description: "Evaluates your listing per rubric dimension — present/missing, evidence, completeness" },
+  benchmark_scorer:      { label: "Benchmark Scorer",      x: 400, y: 510,  description: "Scores your listing 0-10 per dimension against competitor benchmarks" },
+  recommendation_engine: { label: "Recommendation Engine", x: 400, y: 600,  description: "Generates prioritized recommendations with specific copy and competitive evidence" },
+  rewrite_generator:     { label: "Rewrite Generator",     x: 400, y: 690,  description: "Creates 3 optimized rewrite variants — keyword, benefit-led, trust-forward" },
 };
 
-// ── Edges — derived from parent field ────────────────────────────
 interface Edge {
   from: string;
   to: string;
 }
 
 const EDGES: Edge[] = [
-  { from: "START", to: "competitor_analysis" },
-  { from: "START", to: "dimensions" },
-  { from: "START", to: "memory" },
-  { from: "competitor_analysis", to: "trend_sentiment" },
-  { from: "competitor_analysis", to: "brand_voice_profiler" },
-  { from: "competitor_analysis", to: "audience_resonance" },
-  { from: "competitor_analysis", to: "benchmark" },
-  { from: "trend_sentiment", to: "benchmark" },
-  { from: "brand_voice_profiler", to: "benchmark" },
-  { from: "audience_resonance", to: "benchmark" },
-  { from: "dimensions", to: "benchmark" },
-  { from: "memory", to: "benchmark" },
-  { from: "benchmark", to: "evaluator" },
-  { from: "benchmark", to: "creative_variants" },
-  { from: "benchmark", to: "linguistic_analysis" },
-  { from: "creative_variants", to: "evaluator" },
-  { from: "linguistic_analysis", to: "evaluator" },
-  { from: "evaluator", to: "improvement" },
-  { from: "evaluator", to: "gap_analysis" },
-  { from: "evaluator", to: "competitive_positioning" },
-  { from: "evaluator", to: "trend_projection" },
-  { from: "gap_analysis", to: "improvement" },
-  { from: "competitive_positioning", to: "improvement" },
-  { from: "trend_projection", to: "improvement" },
-  { from: "improvement", to: "ab_test_generator" },
-  { from: "improvement", to: "implementation_roadmap" },
-  { from: "ab_test_generator", to: "END" },
-  { from: "implementation_roadmap", to: "END" },
+  { from: "START", to: "input_parser" },
+  { from: "input_parser", to: "category_classifier" },
+  { from: "category_classifier", to: "competitor_scout" },
+  { from: "competitor_scout", to: "competitor_analyzer" },
+  { from: "competitor_analyzer", to: "listing_analyzer" },
+  { from: "listing_analyzer", to: "benchmark_scorer" },
+  { from: "benchmark_scorer", to: "recommendation_engine" },
+  { from: "recommendation_engine", to: "rewrite_generator" },
+  { from: "rewrite_generator", to: "END" },
 ];
 
-// START / END positions
-const START_POS = { x: 400, y: 10 };
-const END_POS = { x: 400, y: 800 };
+const START_POS = { x: 400, y: 15 };
+const END_POS = { x: 400, y: 750 };
 
-// ── Helpers ──────────────────────────────────────────────────────
 function getNodeColor(node: AgentNodeTrace): string {
   if (node.status === "skipped") return "var(--card-border)";
-  if (node.role === "meta") return "#a78bfa";
-  if (node.role === "core") return "var(--accent)";
-  return "#06b6d4";
+  return "var(--accent)";
 }
 
 function formatDuration(ms: number): string {
@@ -90,7 +56,7 @@ function formatDuration(ms: number): string {
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-const NODE_W = 140;
+const NODE_W = 160;
 const NODE_H = 42;
 
 export default function AgentVisualizer({ trace }: Props) {
@@ -98,19 +64,9 @@ export default function AgentVisualizer({ trace }: Props) {
   const [expanded, setExpanded] = useState(true);
 
   const nodeMap = new Map(trace.nodes.map((n) => [n.name, n]));
-
-  // Build a set of completed node names for edge coloring
   const completedSet = new Set(
     trace.nodes.filter((n) => n.status === "completed").map((n) => n.name)
   );
-
-  // Depth level badge color
-  const depthColor =
-    trace.depth_level === "deep"
-      ? "#a78bfa"
-      : trace.depth_level === "standard"
-        ? "var(--accent)"
-        : "var(--text-muted)";
 
   return (
     <div className="glass-card p-8">
@@ -126,87 +82,31 @@ export default function AgentVisualizer({ trace }: Props) {
             {formatDuration(trace.total_duration_ms)} total
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span
-            className="text-xs font-semibold px-3 py-1 rounded-full border"
-            style={{ borderColor: depthColor, color: depthColor }}
-          >
-            {trace.depth_level.toUpperCase()} MODE
-          </span>
-          <svg
-            className={`w-5 h-5 text-[var(--text-muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </div>
+        <svg
+          className={`w-5 h-5 text-[var(--text-muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
       </div>
 
       {expanded && (
         <div className="mt-6">
-          {/* Depth Controller Reasoning */}
-          {trace.depth_reasoning && (
-            <div className="mb-6 p-4 rounded-xl border border-[#a78bfa]/30 bg-[#a78bfa]/5">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-semibold text-[#a78bfa]">
-                  DEPTH CONTROLLER REASONING
-                </span>
-              </div>
-              <p className="text-sm text-[var(--text-muted)]">
-                {trace.depth_reasoning}
-              </p>
-              <div className="flex gap-4 mt-2 text-xs text-[var(--text-muted)]">
-                <span>
-                  Depth:{" "}
-                  <strong style={{ color: depthColor }}>
-                    {trace.depth_level}
-                  </strong>
-                </span>
-                <span>
-                  Trends:{" "}
-                  <strong
-                    style={{
-                      color: trace.enable_trends
-                        ? "var(--score-high)"
-                        : "var(--score-low)",
-                    }}
-                  >
-                    {trace.enable_trends ? "enabled" : "disabled"}
-                  </strong>
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* Legend */}
           <div className="flex flex-wrap gap-4 mb-4 text-xs text-[var(--text-muted)]">
             <span className="flex items-center gap-1.5">
               <span
                 className="w-3 h-3 rounded-full"
-                style={{ background: "#a78bfa" }}
-              />
-              Meta Agent
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span
-                className="w-3 h-3 rounded-full"
                 style={{ background: "var(--accent)" }}
               />
-              Core Agent
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span
-                className="w-3 h-3 rounded-full"
-                style={{ background: "#06b6d4" }}
-              />
-              Branch Agent
+              Completed
             </span>
             <span className="flex items-center gap-1.5">
               <span
@@ -220,9 +120,9 @@ export default function AgentVisualizer({ trace }: Props) {
           {/* SVG Graph */}
           <div className="relative overflow-x-auto">
             <svg
-              viewBox="0 0 800 830"
+              viewBox="0 0 800 790"
               className="w-full max-w-3xl mx-auto"
-              style={{ minWidth: 600 }}
+              style={{ minWidth: 500 }}
             >
               {/* Edges */}
               {EDGES.map((edge, i) => {
@@ -302,7 +202,6 @@ export default function AgentVisualizer({ trace }: Props) {
                     onMouseLeave={() => setHoveredNode(null)}
                     style={{ cursor: "pointer" }}
                   >
-                    {/* Node rect */}
                     <rect
                       x={layout.x - NODE_W / 2}
                       y={layout.y - NODE_H / 2}
@@ -322,7 +221,6 @@ export default function AgentVisualizer({ trace }: Props) {
                       opacity={isCompleted ? 1 : 0.4}
                     />
 
-                    {/* Label */}
                     <text
                       x={layout.x}
                       y={layout.y - 2}
@@ -334,7 +232,6 @@ export default function AgentVisualizer({ trace }: Props) {
                       {layout.label}
                     </text>
 
-                    {/* Duration label */}
                     {node.duration_ms > 0 && (
                       <text
                         x={layout.x}
@@ -347,7 +244,6 @@ export default function AgentVisualizer({ trace }: Props) {
                       </text>
                     )}
 
-                    {/* Status dot */}
                     <circle
                       cx={layout.x + NODE_W / 2 - 8}
                       cy={layout.y - NODE_H / 2 + 8}

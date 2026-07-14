@@ -1,0 +1,43 @@
+{
+  "subcategories": {
+    "Magnesium Glycinate": "supplements_magnesium_glycinate.json",
+    "Creatine Monohydrate": "supplements_creatine_monohydrate.json",
+    "Probiotic Capsules": "supplements_probiotic_capsules.json",
+    "Vitamin D3 + K2": "supplements_vitamin_d3_k2.json",
+    "Collagen Peptides": "supplements_collagen_peptides.json",
+    "Vitamin C Serum": "skincare_vitamin_c_serum.json",
+    "Retinol Serum": "skincare_retinol_serum.json",
+    "Hyaluronic Acid Serum": "skincare_hyaluronic_acid_serum.json",
+    "Sunscreen SPF 50": "skincare_sunscreen_spf50.json",
+    "Niacinamide Serum": "skincare_niacinamide_serum.json"
+  },
+  "aliases": {
+    "magnesium": "Magnesium Glycinate",
+    "magnesium glycinate": "Magnesium Glycinate",
+    "magnesium supplement": "Magnesium Glycinate",
+    "creatine": "Creatine Monohydrate",
+    "creatine monohydrate": "Creatine Monohydrate",
+    "creatine powder": "Creatine Monohydrate",
+    "probiotic": "Probiotic Capsules",
+    "probiotics": "Probiotic Capsules",
+    "probiotic supplement": "Probiotic Capsules",
+    "vitamin d": "Vitamin D3 + K2",
+    "vitamin d3": "Vitamin D3 + K2",
+    "vitamin d3 k2": "Vitamin D3 + K2",
+    "collagen": "Collagen Peptides",
+    "collagen peptides": "Collagen Peptides",
+    "collagen powder": "Collagen Peptides",
+    "vitamin c serum": "Vitamin C Serum",
+    "vitamin c": "Vitamin C Serum",
+    "retinol": "Retinol Serum",
+    "retinal": "Retinol Serum",
+    "retinol serum": "Retinol Serum",
+    "hyaluronic acid": "Hyaluronic Acid Serum",
+    "hyaluronic acid serum": "Hyaluronic Acid Serum",
+    "sunscreen": "Sunscreen SPF 50",
+    "spf": "Sunscreen SPF 50",
+    "sunscreen spf 50": "Sunscreen SPF 50",
+    "niacinamide": "Niacinamide Serum",
+    "niacinamide serum": "Niacinamide Serum"
+  }
+}

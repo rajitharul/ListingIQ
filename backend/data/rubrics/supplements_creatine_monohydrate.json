@@ -1,0 +1,62 @@
+{
+  "vertical": "Supplements & Nutraceuticals",
+  "category": "Sports Nutrition",
+  "subcategory": "Creatine Monohydrate",
+  "version": "1.0",
+  "dimensions": [
+    {
+      "name": "Micronization & Purity",
+      "weight": 0.14,
+      "description": "Is the creatine type specified (micronized, Creapure, monohydrate) with purity details?",
+      "scoring_criteria": "0: No type info. 3: Just 'creatine'. 5: 'Creatine monohydrate' stated. 7: Micronization or brand ingredient (Creapure) mentioned. 10: Specific form + purity percentage + brand ingredient with explanation."
+    },
+    {
+      "name": "Serving Size & Dosage",
+      "weight": 0.12,
+      "description": "Is the recommended serving size, loading protocol, and total servings clear?",
+      "scoring_criteria": "0: No dosage. 3: Weight only. 5: Per-scoop grams. 7: Per-scoop + total servings. 10: Clear dosage, servings per container, loading vs maintenance guidance."
+    },
+    {
+      "name": "Benefit Positioning",
+      "weight": 0.14,
+      "description": "Are both physical (strength, power, recovery) and cognitive benefits positioned?",
+      "scoring_criteria": "0: No benefits. 3: Generic 'muscle support'. 5: Physical benefits only. 7: Physical + recovery benefits. 10: Physical + cognitive + recovery with specific outcomes for different audiences."
+    },
+    {
+      "name": "Mixability & Taste",
+      "weight": 0.08,
+      "description": "Is mixability, dissolvability, taste profile, and versatility communicated?",
+      "scoring_criteria": "0: No mention. 3: 'Unflavored'. 5: 'Mixes easily'. 7: Specific mixing guidance. 10: Mixability tested, no grit/clumping claims, mixing versatility (water, shake, coffee)."
+    },
+    {
+      "name": "Third-Party Testing",
+      "weight": 0.14,
+      "description": "Is third-party testing, Informed Sport, NSF Certified for Sport mentioned?",
+      "scoring_criteria": "0: None. 3: Vague 'tested'. 5: One certification. 7: Sport-specific certification (Informed Sport/NSF for Sport). 10: Multiple sport certifications + banned substance free + heavy metal tested."
+    },
+    {
+      "name": "Format & Convenience",
+      "weight": 0.06,
+      "description": "Are format options (powder, capsules), scoop inclusion, and packaging details clear?",
+      "scoring_criteria": "0: No format info. 3: Basic format. 5: Format + container size. 7: Format + scoop included + resealable packaging. 10: Full format details with convenience features highlighted."
+    },
+    {
+      "name": "Allergen & Dietary Callouts",
+      "weight": 0.08,
+      "description": "Are vegan, gluten-free, sugar-free, no fillers, no artificial ingredients stated?",
+      "scoring_criteria": "0: None. 3: One callout. 5: 2-3 callouts. 7: Comprehensive dietary status. 10: Full allergen statement plus 'nothing else added' positioning."
+    },
+    {
+      "name": "Keyword Coverage",
+      "weight": 0.12,
+      "description": "Does the listing include category-relevant search terms used by top competitors?",
+      "scoring_criteria": "0: Minimal. 3: Basic name. 5: Some relevant terms. 7: Good coverage. 10: Comprehensive keyword strategy across title, bullets, and description."
+    },
+    {
+      "name": "Trust Signals",
+      "weight": 0.12,
+      "description": "Are GMP, cGMP, made in USA, satisfaction guarantee, or brand reputation signals present?",
+      "scoring_criteria": "0: None. 3: One signal. 5: GMP or facility mention. 7: Multiple signals. 10: Comprehensive trust (GMP + facility + guarantee + brand story)."
+    }
+  ]
+}

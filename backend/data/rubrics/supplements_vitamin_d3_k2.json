@@ -1,0 +1,68 @@
+{
+  "vertical": "Supplements & Nutraceuticals",
+  "category": "Vitamins",
+  "subcategory": "Vitamin D3 + K2",
+  "version": "1.0",
+  "dimensions": [
+    {
+      "name": "D3 Dosage Clarity",
+      "weight": 0.14,
+      "description": "Is the D3 dosage clearly stated in both IU and mcg with daily value percentage?",
+      "scoring_criteria": "0: No dosage. 3: IU only. 5: IU + mcg. 7: Full dosage with %DV. 10: Dosage with %DV, context for deficiency levels, and dosing guidance."
+    },
+    {
+      "name": "K2 Form Specificity",
+      "weight": 0.14,
+      "description": "Is the K2 form specified (MK-7 vs MK-4) with sourcing and dosage?",
+      "scoring_criteria": "0: No K2 detail. 3: Just 'K2'. 5: MK-7 or MK-4 named. 7: Form named with mcg dosage. 10: Form specified with sourcing (natto-derived), dosage, and explanation of MK-7 superiority."
+    },
+    {
+      "name": "Source Transparency",
+      "weight": 0.10,
+      "description": "Is the D3 source disclosed (lanolin, lichen for vegan, cholecalciferol)?",
+      "scoring_criteria": "0: No source. 3: 'Vitamin D3'. 5: 'Cholecalciferol'. 7: Source named (lanolin or lichen). 10: Full sourcing with vegan/non-vegan distinction and rationale."
+    },
+    {
+      "name": "Absorption Enhancement",
+      "weight": 0.10,
+      "description": "Is oil-based formula, MCT oil, or fat-soluble absorption strategy mentioned?",
+      "scoring_criteria": "0: No mention. 3: Vague 'enhanced absorption'. 5: Oil-based noted. 7: Specific oil carrier (MCT, olive, coconut). 10: Oil carrier + explanation of why D3/K2 need fat for absorption."
+    },
+    {
+      "name": "Synergy Explanation",
+      "weight": 0.10,
+      "description": "Is the D3+K2 synergy explained (calcium direction, bone/heart health)?",
+      "scoring_criteria": "0: No synergy mention. 3: 'D3 and K2 together'. 5: Basic synergy claim. 7: Explains calcium metabolism. 10: Full synergy explanation — D3 absorbs calcium, K2 directs it to bones not arteries."
+    },
+    {
+      "name": "Use-Case Positioning",
+      "weight": 0.10,
+      "description": "Are specific outcomes targeted (bone health, immune support, mood, cardiovascular)?",
+      "scoring_criteria": "0: No outcomes. 3: Generic 'health'. 5: One outcome. 7: 2-3 outcomes. 10: Multiple outcomes with audience-specific context."
+    },
+    {
+      "name": "Allergen & Dietary Callouts",
+      "weight": 0.08,
+      "description": "Are vegan, gluten-free, soy-free, non-GMO stated?",
+      "scoring_criteria": "0: None. 5: Some callouts. 10: Comprehensive with vegan sourcing clarity."
+    },
+    {
+      "name": "Third-Party Testing",
+      "weight": 0.10,
+      "description": "Are third-party testing, USP, NSF certifications mentioned?",
+      "scoring_criteria": "0: None. 5: Basic testing claim. 10: Multiple certifications with specifics."
+    },
+    {
+      "name": "Keyword Coverage",
+      "weight": 0.08,
+      "description": "Does the listing include category-relevant search terms?",
+      "scoring_criteria": "0: Minimal. 5: Moderate. 10: Comprehensive."
+    },
+    {
+      "name": "Trust Signals",
+      "weight": 0.06,
+      "description": "Are GMP, made in USA, doctor-recommended signals present?",
+      "scoring_criteria": "0: None. 5: Basic. 10: Comprehensive trust framework."
+    }
+  ]
+}

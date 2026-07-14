@@ -1,10 +1,7 @@
 import type {
-  BrandInput,
+  ListingInput,
   FullPipelineResponse,
-  ImprovementSuggestion,
   FeedbackEntry,
-  EvaluationResult,
-  DepthConfig,
 } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -22,30 +19,13 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export async function runPipeline(
-  brandInput: BrandInput,
-  depthConfig?: DepthConfig
+  listingInput: ListingInput
 ): Promise<FullPipelineResponse> {
   return apiFetch<FullPipelineResponse>("/api/pipeline", {
     method: "POST",
     body: JSON.stringify({
-      brand_input: brandInput,
+      listing_input: listingInput,
       session_id: `session_${Date.now()}`,
-      depth_config: depthConfig ?? { enable_trends: true, depth_level: "standard" },
-    }),
-  });
-}
-
-export async function getImprovement(
-  brandInput: BrandInput,
-  targetDimension: string,
-  currentEvaluation: EvaluationResult
-): Promise<ImprovementSuggestion[]> {
-  return apiFetch<ImprovementSuggestion[]>("/api/improve", {
-    method: "POST",
-    body: JSON.stringify({
-      brand_input: brandInput,
-      target_dimension: targetDimension,
-      current_evaluation: currentEvaluation,
     }),
   });
 }
@@ -74,15 +54,13 @@ export async function addGuideline(
  * then resolves with the full FullPipelineResponse.
  */
 export function runPipelineStream(
-  brandInput: BrandInput,
-  onNodeComplete: (node: string) => void,
-  depthConfig?: DepthConfig
+  listingInput: ListingInput,
+  onNodeComplete: (node: string) => void
 ): Promise<FullPipelineResponse> {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
-      brand_input: brandInput,
+      listing_input: listingInput,
       session_id: `session_${Date.now()}`,
-      depth_config: depthConfig ?? { enable_trends: true, depth_level: "standard" },
     });
 
     fetch(`${API_BASE}/api/pipeline/stream`, {
@@ -101,12 +79,9 @@ export function runPipelineStream(
 
         const decoder = new TextDecoder();
         let buffer = "";
-
         let settled = false;
 
         function processEvents(): void {
-          // SSE protocol: events separated by double newline
-          // Normalize \r\n → \n so split works with HTTP-style line endings
           buffer = buffer.replace(/\r\n/g, "\n");
           const parts = buffer.split("\n\n");
           buffer = parts.pop() || "";
@@ -121,12 +96,7 @@ export function runPipelineStream(
               if (line.startsWith("data: ")) data += line.slice(6);
             }
 
-            if (eventType === "depth_assigned" && data) {
-              // Depth controller assigned analysis depth — informational only
-              try {
-                onNodeComplete("depth_controller");
-              } catch {}
-            } else if (eventType === "node_complete" && data) {
+            if (eventType === "node_complete" && data) {
               try {
                 const payload = JSON.parse(data);
                 onNodeComplete(payload.node);
@@ -160,7 +130,6 @@ export function runPipelineStream(
             processEvents();
             if (settled) return;
             if (done) {
-              // Flush any remaining buffer as a final event
               if (buffer.trim()) {
                 buffer += "\n\n";
                 processEvents();
@@ -174,7 +143,9 @@ export function runPipelineStream(
           });
         }
 
-        pump().catch((e) => { if (!settled) reject(e); });
+        pump().catch((e) => {
+          if (!settled) reject(e);
+        });
       })
       .catch(reject);
   });

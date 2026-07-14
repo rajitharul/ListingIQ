@@ -1,12 +1,12 @@
 """
 Feedback & Memory Agent
-Manages the persistent agentic memory -- stores feedback, guidelines, and learned preferences.
+Manages persistent agentic memory — stores feedback, guidelines, and learned preferences.
 In production this would use a vector DB or Cosmos DB. For demo, uses in-memory store.
 """
 import time
 from models.schemas import FeedbackEntry, MemoryEntry
 
-# -- In-memory stores (would be Cosmos DB / vector DB in production) --
+# -- In-memory stores (would be a database in production) --
 _feedback_log: list[dict] = []
 _memory_store: dict[str, list[MemoryEntry]] = {}  # keyed by brand_name
 
@@ -51,7 +51,7 @@ def record_feedback(entry: FeedbackEntry) -> dict:
             entry.brand_name,
             MemoryEntry(
                 brand_name=entry.brand_name,
-                guideline=f"User approved changing '{entry.original_content}' to '{entry.suggested_content}' for {entry.dimension}",
+                guideline=f"User approved suggestion for {entry.dimension}: '{entry.suggested_content}'",
                 source="learned_preference",
                 confidence=0.8,
             ),
@@ -91,16 +91,3 @@ def _add_memory(brand_name: str, entry: MemoryEntry) -> None:
     if key not in _memory_store:
         _memory_store[key] = []
     _memory_store[key].append(entry)
-
-
-# ── LangGraph node wrapper ────────────────────────────────────
-async def memory_node(state: dict) -> dict:
-    """LangGraph node: retrieves cached guidelines and preferences for the brand."""
-    import logging
-    _log = logging.getLogger("sitescore.agent.memory")
-    _log.info("⚙ memory_node ENTER")
-    brand_input = state["brand_input"]
-    brand_name = brand_input.brand_name if hasattr(brand_input, "brand_name") else brand_input["brand_name"]
-    context = get_memory_context(brand_name)
-    _log.info("⚙ memory_node EXIT  brand=%s  entries=%d", brand_name, len(context))
-    return {"memory_context": context}

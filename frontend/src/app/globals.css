@@ -5,8 +5,8 @@
   --foreground: #1f2937;
   --card-bg: #ffffff;
   --card-border: #e5e7eb;
-  --accent: #dc2626;
-  --accent-light: #ef4444;
+  --accent: #059669;
+  --accent-light: #10b981;
   --score-low: #dc2626;
   --score-mid: #d97706;
   --score-high: #16a34a;
@@ -47,10 +47,10 @@ body {
 @keyframes pulse-glow {
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(220, 38, 38, 0.15);
+    box-shadow: 0 0 20px rgba(5, 150, 105, 0.15);
   }
   50% {
-    box-shadow: 0 0 40px rgba(220, 38, 38, 0.3);
+    box-shadow: 0 0 40px rgba(5, 150, 105, 0.3);
   }
 }
 .pulse-glow {

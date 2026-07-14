@@ -1,0 +1,68 @@
+{
+  "vertical": "Beauty & Cosmetics",
+  "category": "Skincare",
+  "subcategory": "Niacinamide Serum",
+  "version": "1.0",
+  "dimensions": [
+    {
+      "name": "Concentration Transparency",
+      "weight": 0.14,
+      "description": "Is the niacinamide concentration/percentage stated?",
+      "scoring_criteria": "0: No concentration. 3: 'High potency'. 5: Percentage stated. 7: Percentage with why that level is optimal. 10: Percentage with efficacy data and concentration vs irritation tradeoff explained."
+    },
+    {
+      "name": "Pore-Minimizing Claims",
+      "weight": 0.12,
+      "description": "Are pore-minimizing, oil-control, and sebum-regulation claims specific?",
+      "scoring_criteria": "0: No claims. 3: Generic 'pore care'. 5: 'Minimizes pores'. 7: Specific mechanism (sebum regulation). 10: Clinical pore reduction data with visible results timeline."
+    },
+    {
+      "name": "Oil Control Positioning",
+      "weight": 0.10,
+      "description": "Is oil-control, mattifying, or shine-reduction benefit communicated?",
+      "scoring_criteria": "0: No mention. 5: 'Controls oil'. 10: Specific oil-control duration with mechanism and oily-skin suitability."
+    },
+    {
+      "name": "Ingredient Pairing Guidance",
+      "weight": 0.10,
+      "description": "Is guidance on what to pair with (HA, zinc) and avoid (vitamin C at same time) provided?",
+      "scoring_criteria": "0: No guidance. 3: One pairing. 5: Compatible ingredients listed. 7: Pairings + conflicts noted. 10: Full pairing guide with layering order and timing."
+    },
+    {
+      "name": "Multi-Benefit Positioning",
+      "weight": 0.12,
+      "description": "Are multiple benefits communicated (barrier repair, brightening, anti-aging, anti-acne)?",
+      "scoring_criteria": "0: One benefit only. 3: 2 benefits. 5: 3 benefits. 7: 4+ benefits with specifics. 10: Comprehensive multi-benefit positioning with which benefit matters for which concern."
+    },
+    {
+      "name": "Skin Type Targeting",
+      "weight": 0.10,
+      "description": "Is suitability for specific skin types clearly communicated?",
+      "scoring_criteria": "0: No targeting. 5: 'All skin types'. 10: Specific type guidance with special suitability for oily/combo skin."
+    },
+    {
+      "name": "Texture & Sensory",
+      "weight": 0.06,
+      "description": "Is texture described (lightweight, watery, non-greasy)?",
+      "scoring_criteria": "0: No description. 5: Basic texture. 10: Full sensory profile with absorption and finish."
+    },
+    {
+      "name": "Certifications",
+      "weight": 0.08,
+      "description": "Are vegan, cruelty-free, fragrance-free, non-comedogenic stated?",
+      "scoring_criteria": "0: None. 5: Some. 10: Comprehensive."
+    },
+    {
+      "name": "Clinical Backing",
+      "weight": 0.08,
+      "description": "Is dermatologist-tested or clinically studied referenced?",
+      "scoring_criteria": "0: None. 5: Basic claim. 10: Specific clinical evidence."
+    },
+    {
+      "name": "Keyword Coverage",
+      "weight": 0.10,
+      "description": "Category-relevant search terms coverage.",
+      "scoring_criteria": "0: Minimal. 5: Moderate. 10: Comprehensive."
+    }
+  ]
+}

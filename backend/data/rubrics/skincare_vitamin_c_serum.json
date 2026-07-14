@@ -1,0 +1,68 @@
+{
+  "vertical": "Beauty & Cosmetics",
+  "category": "Skincare",
+  "subcategory": "Vitamin C Serum",
+  "version": "1.0",
+  "dimensions": [
+    {
+      "name": "Concentration Transparency",
+      "weight": 0.14,
+      "description": "Is the vitamin C percentage stated (10%, 15%, 20%)?",
+      "scoring_criteria": "0: No concentration. 3: Vague 'high potency'. 5: Concentration range. 7: Exact percentage. 10: Exact percentage with context on why that level was chosen and skin type suitability."
+    },
+    {
+      "name": "Form Specificity",
+      "weight": 0.12,
+      "description": "Is the form of vitamin C identified (L-ascorbic acid, SAP, ascorbyl glucoside)?",
+      "scoring_criteria": "0: No form. 3: Just 'Vitamin C'. 5: Form named. 7: Form named with benefit. 10: Form named with stability/efficacy explanation and comparison to other forms."
+    },
+    {
+      "name": "Ingredient Synergy",
+      "weight": 0.10,
+      "description": "Are supporting ingredients called out (vitamin E, ferulic acid, hyaluronic acid)?",
+      "scoring_criteria": "0: No supporting ingredients. 3: One mentioned. 5: 2-3 mentioned. 7: Key synergies explained (CE Ferulic combination). 10: Full ingredient synergy map with why each enhances the vitamin C."
+    },
+    {
+      "name": "Skin Type Targeting",
+      "weight": 0.10,
+      "description": "Is suitability for specific skin types stated (oily, dry, sensitive, acne-prone)?",
+      "scoring_criteria": "0: No targeting. 3: 'All skin types'. 5: 1-2 types mentioned. 7: Specific type suitability with explanation. 10: Detailed skin type guidance with any contraindications noted."
+    },
+    {
+      "name": "Outcome Specificity",
+      "weight": 0.10,
+      "description": "Are specific results promised (dark spots, brightening, collagen boost, sun damage repair)?",
+      "scoring_criteria": "0: No outcomes. 3: Generic 'anti-aging'. 5: 1-2 outcomes. 7: Multiple specific outcomes. 10: Specific outcomes with timeline expectations and before/after context."
+    },
+    {
+      "name": "Texture & Sensory",
+      "weight": 0.06,
+      "description": "Is product feel described (lightweight, non-greasy, fast-absorbing, no sticky residue)?",
+      "scoring_criteria": "0: No texture info. 3: One descriptor. 5: Basic feel. 7: Detailed texture description. 10: Full sensory profile including absorption speed, finish, and under-makeup compatibility."
+    },
+    {
+      "name": "Certifications",
+      "weight": 0.10,
+      "description": "Are vegan, cruelty-free, paraben-free, fragrance-free, dermatologist-tested stated?",
+      "scoring_criteria": "0: None. 3: 1 certification. 5: 2-3 certifications. 7: Comprehensive 'free-from' list. 10: Full certification suite with cruelty-free + vegan + clean ingredient positioning."
+    },
+    {
+      "name": "Clinical Backing",
+      "weight": 0.08,
+      "description": "Is dermatologist-tested, clinically proven, or clinical study referenced?",
+      "scoring_criteria": "0: None. 3: 'Dermatologist approved'. 5: 'Clinically tested'. 7: Specific test methodology. 10: Named clinical study with results data."
+    },
+    {
+      "name": "Routine Positioning",
+      "weight": 0.08,
+      "description": "Is where it fits in a skincare routine explained (after toner, before moisturizer)?",
+      "scoring_criteria": "0: No guidance. 3: 'Apply to face'. 5: Basic AM/PM. 7: Step-in-routine guidance. 10: Full routine integration with complementary product suggestions."
+    },
+    {
+      "name": "Keyword Coverage",
+      "weight": 0.12,
+      "description": "Does the listing include category-relevant search terms present in top competitors?",
+      "scoring_criteria": "0: Minimal. 5: Moderate. 10: Comprehensive keyword strategy."
+    }
+  ]
+}

@@ -2,35 +2,30 @@
 
 import { useState } from "react";
 import Header from "@/components/Header";
-import BrandInputForm from "@/components/BrandInputForm";
+import ListingInputForm from "@/components/ListingInputForm";
 import CompetitorCards from "@/components/CompetitorCards";
+import CompetitorAnalysisPanel from "@/components/CompetitorAnalysisPanel";
 import ScoreMatrix from "@/components/ScoreMatrix";
 import RadarChartComponent from "@/components/RadarChart";
-import ImprovementPanel from "@/components/ImprovementPanel";
+import RecommendationPanel from "@/components/RecommendationPanel";
+import RewritePanel from "@/components/RewritePanel";
 import FeedbackPanel from "@/components/FeedbackPanel";
-import TrendPanel from "@/components/TrendPanel";
-import DeepInsightsPanel from "@/components/DeepInsightsPanel";
-import TrendProjectionPanel from "@/components/TrendProjectionPanel";
 import AgentVisualizer from "@/components/AgentVisualizer";
 import LoadingOverlay from "@/components/LoadingOverlay";
-import { runPipeline, runPipelineStream } from "@/lib/api";
-import type {
-  BrandInput,
-  FullPipelineResponse,
-  ImprovementSuggestion,
-} from "@/types";
+import { runPipelineStream } from "@/lib/api";
+import type { ListingInput, FullPipelineResponse } from "@/types";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<FullPipelineResponse | null>(null);
-  const [brandInput, setBrandInput] = useState<BrandInput | null>(null);
+  const [listingInput, setListingInput] = useState<ListingInput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [completedNodes, setCompletedNodes] = useState<string[]>([]);
 
-  const handleSubmit = async (input: BrandInput) => {
+  const handleSubmit = async (input: ListingInput) => {
     setIsLoading(true);
     setError(null);
-    setBrandInput(input);
+    setListingInput(input);
     setCompletedNodes([]);
     try {
       const response = await runPipelineStream(input, (node) => {
@@ -49,40 +44,6 @@ export default function Home() {
     }
   };
 
-  const handleNewSuggestions = (suggestions: ImprovementSuggestion[]) => {
-    if (result) {
-      setResult({ ...result, suggestions });
-    }
-  };
-
-  const handleApplySuggestion = async (newTagline: string) => {
-    if (!brandInput) return;
-    const updatedInput = { ...brandInput, current_tagline: newTagline };
-    setBrandInput(updatedInput);
-    // Re-run the full pipeline with the new tagline
-    setIsLoading(true);
-    setCompletedNodes([]);
-    try {
-      const response = await runPipelineStream(updatedInput, (node) => {
-        setCompletedNodes((prev) => [...prev, node]);
-      });
-      setResult(response);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Re-evaluation failed."
-      );
-    } finally {
-      setIsLoading(false);
-      setCompletedNodes([]);
-    }
-  };
-
-  const handleDimensionClick = async (dimension: string) => {
-    if (!brandInput || !result) return;
-    const panel = document.getElementById("improvements");
-    panel?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -94,21 +55,21 @@ export default function Home() {
           {!result && (
             <div className="text-center py-12">
               <h1 className="text-4xl font-extrabold tracking-tight mb-3">
-                <span className="bg-gradient-to-r from-red-600 to-red-400 bg-clip-text text-transparent">
-                  Competitive Intelligence,
+                <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+                  Optimize Your Product Listings
                 </span>{" "}
-                Quantified
+                with AI
               </h1>
               <p className="text-lg text-[var(--text-muted)] max-w-2xl mx-auto">
-                Benchmark your marketing copy against real competitors using an
-                8-agent AI pipeline. Get numerical scores, targeted
-                improvements, and adaptive learning.
+                Score your ecommerce listings against the top 10 competitors using an
+                8-agent AI pipeline. Get per-dimension scores, targeted
+                recommendations, and optimized rewrites.
               </p>
             </div>
           )}
 
           {/* Input form */}
-          <BrandInputForm onSubmit={handleSubmit} isLoading={isLoading} />
+          <ListingInputForm onSubmit={handleSubmit} isLoading={isLoading} />
 
           {/* Error */}
           {error && (
@@ -118,9 +79,9 @@ export default function Home() {
           )}
 
           {/* Results */}
-          {result && brandInput && (
+          {result && listingInput && (
             <>
-              {/* User's current score hero */}
+              {/* Overall score hero */}
               <div className="glass-card p-8 text-center">
                 <p className="text-sm text-[var(--text-muted)] mb-2">
                   Your Overall Score
@@ -130,35 +91,29 @@ export default function Home() {
                     className="text-6xl font-black"
                     style={{
                       color:
-                        result.evaluation.user_score.overall_score >= 7.5
+                        result.scores.overall_score >= 7.5
                           ? "var(--score-high)"
-                          : result.evaluation.user_score.overall_score >= 5
+                          : result.scores.overall_score >= 5
                             ? "var(--score-mid)"
                             : "var(--score-low)",
                     }}
                   >
-                    {result.evaluation.user_score.overall_score.toFixed(1)}
+                    {result.scores.overall_score.toFixed(1)}
                   </span>
                   <span className="text-2xl text-[var(--text-muted)]">
                     /10
                   </span>
                 </div>
                 <p className="text-sm text-[var(--text-muted)] mt-2">
-                  Rank{" "}
+                  Percentile{" "}
                   <span className="font-bold text-[var(--foreground)]">
-                    #{result.evaluation.user_score.rank}
+                    P{result.scores.percentile}
                   </span>{" "}
-                  of {result.evaluation.rankings.length} brands &middot;
-                  &ldquo;{brandInput.current_tagline}&rdquo;
+                  &middot; {result.category.vertical} &rarr; {result.category.subcategory}
                 </p>
-                <div className="mt-4 inline-block px-4 py-2 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20">
-                  <span className="text-xs text-[var(--text-muted)]">
-                    Benchmark:{" "}
-                  </span>
-                  <span className="text-xs text-[var(--accent-light)] font-medium">
-                    &ldquo;{result.evaluation.benchmark.ideal_tagline}&rdquo;
-                  </span>
-                </div>
+                <p className="text-xs text-[var(--text-muted)] mt-1">
+                  &ldquo;{listingInput.product_title}&rdquo;
+                </p>
               </div>
 
               {/* Agent Pipeline Visualizer */}
@@ -166,51 +121,37 @@ export default function Home() {
                 <AgentVisualizer trace={result.agent_trace} />
               )}
 
-              {/* Competitor cards */}
-              <CompetitorCards
-                data={result.competitors}
-                scores={result.evaluation.competitor_scores}
-              />
+              {/* Competitor listings */}
+              <CompetitorCards data={result.competitors} />
 
-              {/* Trend & Sentiment panel */}
-              {result.trend_data && (
-                <TrendPanel trendData={result.trend_data} />
-              )}
+              {/* Competitor analysis */}
+              <CompetitorAnalysisPanel analysis={result.competitor_analysis} />
 
               {/* Score matrix + Radar side by side */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
-                  <ScoreMatrix
-                    evaluation={result.evaluation}
-                    onDimensionClick={handleDimensionClick}
-                  />
+                  <ScoreMatrix scores={result.scores} />
                 </div>
                 <div>
-                  <RadarChartComponent evaluation={result.evaluation} />
+                  <RadarChartComponent scores={result.scores} />
                 </div>
               </div>
 
-              {/* Improvements */}
-              <div id="improvements">
-                <ImprovementPanel
-                  suggestions={result.suggestions}
-                  brandInput={brandInput}
-                  evaluation={result.evaluation}
-                  onNewSuggestions={handleNewSuggestions}
-                  onApplySuggestion={handleApplySuggestion}
-                />
-              </div>
+              {/* Recommendations */}
+              <RecommendationPanel recommendations={result.recommendations} />
 
-              {/* Deep Insights (branch agents — deep mode only) */}
-              <DeepInsightsPanel result={result} />
-
-              {/* Trend Projection (deep mode with history) */}
-              <TrendProjectionPanel result={result} />
+              {/* Rewrites */}
+              <RewritePanel
+                rewrites={result.rewrites}
+                originalTitle={result.parsed_listing.original_title}
+                originalBullets={result.parsed_listing.original_bullets}
+                originalDescription={result.parsed_listing.original_description}
+              />
 
               {/* Feedback & Memory */}
               <FeedbackPanel
-                brandInput={brandInput}
-                memoryContext={result.memory_context}
+                listingInput={listingInput}
+                memoryContext={[]}
               />
             </>
           )}
@@ -220,7 +161,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-[var(--card-border)] py-6 text-center">
         <p className="text-xs text-[var(--text-muted)]">
-          Sitescore v2.0 — Multi-Agent Benchmarking Engine | Powered by GPT-4o
+          ListingIQ v1.0 — 8-Agent Product Listing Optimization Engine | Powered by GPT-4o
         </p>
       </footer>
     </div>

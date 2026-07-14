@@ -1,0 +1,62 @@
+{
+  "vertical": "Supplements & Nutraceuticals",
+  "category": "Minerals",
+  "subcategory": "Magnesium Glycinate",
+  "version": "1.0",
+  "dimensions": [
+    {
+      "name": "Form Specificity",
+      "weight": 0.15,
+      "description": "Does the listing specify the magnesium form (glycinate, citrate, oxide)?",
+      "scoring_criteria": "0: No form mentioned. 3: Generic 'magnesium' only. 5: Form named but not explained. 7: Form named with brief benefit (e.g. 'gentle on stomach'). 10: Form named, explained why it matters (absorption, bioavailability), compared to inferior forms."
+    },
+    {
+      "name": "Dosage Clarity",
+      "weight": 0.12,
+      "description": "Is dosage per serving clearly stated with elemental magnesium amount?",
+      "scoring_criteria": "0: No dosage info. 3: Total mg only. 5: Per-serving mg stated. 7: Elemental mg clearly distinguished from compound mg. 10: Elemental mg, servings per container, and recommended daily intake context all present."
+    },
+    {
+      "name": "Third-Party Testing",
+      "weight": 0.15,
+      "description": "Is USP, NSF, ConsumerLab, or other third-party verification mentioned?",
+      "scoring_criteria": "0: None mentioned. 3: Vague 'tested' claim. 5: One certification named. 7: Specific certification body with detail. 10: Multiple certifications (USP + NSF + GMP) with certificate or badge reference."
+    },
+    {
+      "name": "Bioavailability Claims",
+      "weight": 0.10,
+      "description": "Is absorption or bioavailability explained?",
+      "scoring_criteria": "0: No mention. 3: Vague 'easy to absorb'. 5: States 'high bioavailability'. 7: Explains why glycinate form absorbs better. 10: Quantified bioavailability data or clinical reference comparing absorption rates."
+    },
+    {
+      "name": "Allergen & Dietary Callouts",
+      "weight": 0.08,
+      "description": "Are gluten-free, vegan, soy-free, non-GMO, and other dietary certifications stated?",
+      "scoring_criteria": "0: None. 3: One callout. 5: 2-3 callouts. 7: Comprehensive dietary status (gluten-free, vegan, soy-free, non-GMO). 10: Full allergen statement plus dietary certifications with clear formatting."
+    },
+    {
+      "name": "Use-Case Positioning",
+      "weight": 0.12,
+      "description": "Are specific outcomes targeted (sleep, stress, muscle, migraine, bone health)?",
+      "scoring_criteria": "0: No use cases. 3: Generic 'health support'. 5: One specific use case. 7: 2-3 targeted use cases. 10: Multiple specific outcomes with context on who benefits most."
+    },
+    {
+      "name": "Serving Value",
+      "weight": 0.08,
+      "description": "Are servings per container and cost-per-serving communicated?",
+      "scoring_criteria": "0: No serving info. 3: Capsule count only. 5: Servings per container stated. 7: Servings plus supply duration (e.g. '2-month supply'). 10: Clear value proposition with servings, supply duration, and cost-per-serving context."
+    },
+    {
+      "name": "Keyword Coverage",
+      "weight": 0.10,
+      "description": "Does the listing include category-relevant search terms that top competitors use?",
+      "scoring_criteria": "0: Minimal keywords. 3: Basic product name only. 5: Some relevant keywords. 7: Good keyword coverage in title and bullets. 10: Comprehensive keyword strategy matching or exceeding top 10 competitors."
+    },
+    {
+      "name": "Trust Signals",
+      "weight": 0.10,
+      "description": "Are GMP, FDA-registered facility, made in USA, cGMP, or similar trust markers present?",
+      "scoring_criteria": "0: None. 3: One vague claim. 5: GMP or made in USA stated. 7: Multiple trust signals clearly stated. 10: Comprehensive trust framework (GMP + FDA-registered + made in USA + satisfaction guarantee)."
+    }
+  ]
+}

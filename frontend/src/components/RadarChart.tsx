@@ -9,27 +9,21 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import type { EvaluationResult } from "@/types";
+import type { ListingScore } from "@/types";
 
 interface Props {
-  evaluation: EvaluationResult;
+  scores: ListingScore;
 }
 
-const COLORS = ["#dc2626", "#2563eb", "#d97706", "#16a34a", "#9333ea"];
-
-export default function RadarChartComponent({ evaluation }: Props) {
-  const { user_score, competitor_scores, dimensions } = evaluation;
-  const allScores = [user_score, ...competitor_scores];
-
-  const chartData = dimensions.map((dim) => {
-    const entry: Record<string, string | number> = { dimension: dim.name };
-    allScores.forEach((s) => {
-      const ds = s.dimension_scores.find((d) => d.dimension === dim.name);
-      entry[s.brand_name] = ds?.score ?? 0;
-    });
-    entry["Benchmark"] = 10;
-    return entry;
-  });
+export default function RadarChartComponent({ scores }: Props) {
+  const chartData = scores.dimension_scores.map((dim) => ({
+    dimension: dim.dimension.length > 18
+      ? dim.dimension.slice(0, 16) + "..."
+      : dim.dimension,
+    "Your Listing": dim.score,
+    "Top 10 Avg": dim.competitor_avg,
+    Benchmark: 10,
+  }));
 
   return (
     <div className="glass-card p-8">
@@ -40,7 +34,7 @@ export default function RadarChartComponent({ evaluation }: Props) {
             <PolarGrid stroke="rgba(0,0,0,0.1)" />
             <PolarAngleAxis
               dataKey="dimension"
-              tick={{ fill: "#6b7280", fontSize: 11 }}
+              tick={{ fill: "#6b7280", fontSize: 10 }}
             />
             <PolarRadiusAxis
               angle={30}
@@ -48,21 +42,22 @@ export default function RadarChartComponent({ evaluation }: Props) {
               tick={{ fill: "#6b7280", fontSize: 10 }}
               tickCount={6}
             />
-            {allScores.map((s, i) => (
-              <Radar
-                key={s.brand_name}
-                name={s.brand_name}
-                dataKey={s.brand_name}
-                stroke={COLORS[i % COLORS.length]}
-                fill={COLORS[i % COLORS.length]}
-                fillOpacity={
-                  s.brand_name === user_score.brand_name ? 0.2 : 0.05
-                }
-                strokeWidth={
-                  s.brand_name === user_score.brand_name ? 2.5 : 1.5
-                }
-              />
-            ))}
+            <Radar
+              name="Your Listing"
+              dataKey="Your Listing"
+              stroke="#059669"
+              fill="#059669"
+              fillOpacity={0.2}
+              strokeWidth={2.5}
+            />
+            <Radar
+              name="Top 10 Avg"
+              dataKey="Top 10 Avg"
+              stroke="#2563eb"
+              fill="#2563eb"
+              fillOpacity={0.05}
+              strokeWidth={1.5}
+            />
             <Radar
               name="Benchmark"
               dataKey="Benchmark"

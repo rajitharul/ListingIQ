@@ -1,69 +1,60 @@
 """
-LangGraph State Definition
-Central TypedDict that flows through every node in the Sitescore graph.
+LangGraph State Definition — ListingIQ
+Central TypedDict that flows through every node in the ListingIQ graph.
 """
 from __future__ import annotations
 
-from typing import TypedDict, Annotated
-from operator import add
+from typing import TypedDict
 
 from models.schemas import (
-    BrandInput,
-    Competitor,
-    CompetitorAnalysisResult,
-    Dimension,
-    BenchmarkSnippet,
-    EvaluationResult,
-    ImprovementSuggestion,
+    ListingInput,
+    ParsedListing,
+    CategoryClassification,
+    ScoringRubric,
+    CompetitorScoutResult,
+    CompetitorAnalysis,
+    ListingAnalysis,
+    ListingScore,
+    RecommendationResult,
+    RewriteResult,
     MemoryEntry,
-    TrendAnalysisResult,
-    DepthConfig,
 )
 
 
-class SitescoreState(TypedDict, total=False):
+class ListingIQState(TypedDict, total=False):
     """
     Shared state flowing through the LangGraph pipeline.
     Each node reads what it needs and writes its output keys.
     """
 
     # ── Inputs (set before graph invocation) ──────────────────────
-    brand_input: BrandInput
-    custom_dimensions: list[Dimension] | None
+    listing_input: ListingInput
     session_id: str
 
-    # ── Node outputs ──────────────────────────────────────────────
-    # competitor_analysis_node →
-    competitor_result: CompetitorAnalysisResult
+    # ── Agent 1: Input Parser → ──────────────────────────────────
+    parsed_listing: ParsedListing
 
-    # dimensions_node →
-    dimensions: list[Dimension]
+    # ── Agent 2: Category Classifier → ───────────────────────────
+    category: CategoryClassification
+    rubric: ScoringRubric
 
-    # memory_node →
+    # ── Agent 3: Competitor Scout → (parallel branch) ────────────
+    competitor_scout_result: CompetitorScoutResult
+
+    # ── Agent 4: Competitor Analyzer → ───────────────────────────
+    competitor_analysis: CompetitorAnalysis
+
+    # ── Agent 5: Listing Analyzer → (parallel branch) ────────────
+    listing_analysis: ListingAnalysis
+
+    # ── Agent 6: Benchmark Scorer → (merge point) ────────────────
+    scores: ListingScore
+
+    # ── Agent 7: Recommendation Engine → ─────────────────────────
+    recommendations: RecommendationResult
+
+    # ── Agent 8: Rewrite Generator → ─────────────────────────────
+    rewrites: RewriteResult
+
+    # ── Memory context (from feedback_memory node if used) ───────
     memory_context: list[MemoryEntry]
-
-    # benchmark_node →
-    benchmark: BenchmarkSnippet
-
-    # evaluator_node →
-    evaluation: EvaluationResult
-
-    # improvement_node →
-    suggestions: list[ImprovementSuggestion]
-
-    # trend_sentiment_node →
-    trend_data: TrendAnalysisResult | None
-
-    # depth control
-    depth_config: DepthConfig | None
-
-    # ── Branch agent outputs ──────────────────────────────────────
-    brand_voice_data: dict | None
-    audience_resonance_data: dict | None
-    creative_variants_data: dict | None
-    linguistic_data: dict | None
-    gap_analysis_data: dict | None
-    positioning_data: dict | None
-    ab_test_data: dict | None
-    roadmap_data: dict | None
-    trend_projection_data: dict | None
