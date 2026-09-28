@@ -4,7 +4,9 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import ListingInputForm from "@/components/ListingInputForm";
 import CompetitorCards from "@/components/CompetitorCards";
+import DataProvenance from "@/components/DataProvenance";
 import CompetitorAnalysisPanel from "@/components/CompetitorAnalysisPanel";
+import BenchmarkPanel from "@/components/BenchmarkPanel";
 import ScoreMatrix from "@/components/ScoreMatrix";
 import RadarChartComponent from "@/components/RadarChart";
 import RecommendationPanel from "@/components/RecommendationPanel";
@@ -114,6 +116,12 @@ export default function Home() {
                 <p className="text-xs text-[var(--text-muted)] mt-1">
                   &ldquo;{listingInput.product_title}&rdquo;
                 </p>
+                {/* The score is derived entirely from the competitor set, so its
+                    provenance belongs next to the number itself, not only in
+                    the competitor section further down. */}
+                <div className="mt-4 max-w-xl mx-auto">
+                  <DataProvenance data={result.competitors} />
+                </div>
               </div>
 
               {/* Agent Pipeline Visualizer */}
@@ -123,6 +131,13 @@ export default function Home() {
 
               {/* Competitor listings */}
               <CompetitorCards data={result.competitors} />
+
+              {/* The measured benchmark the score is derived from */}
+              <BenchmarkPanel
+                primary={result.competitor_benchmark}
+                wide={result.competitor_benchmark_all}
+                scores={result.scores}
+              />
 
               {/* Competitor analysis */}
               <CompetitorAnalysisPanel analysis={result.competitor_analysis} />

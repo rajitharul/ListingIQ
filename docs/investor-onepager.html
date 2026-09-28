@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contrem Analyser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<style>
+:root{
+  --paper:#FFFFFF;
+  --ink:#111111;
+  --ink-2:#3D3D3D;
+  --muted:#767676;
+  --hair:#E2E2E2;
+  --hair-dark:#BDBDBD;
+  --accent:#5D4E9C;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+}
+.page{max-width:900px;margin:0 auto;padding-inline:clamp(20px,5vw,48px);padding-block:26px 72px}
+
+h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-.03em;line-height:1.08;font-weight:800}
+h1{font-size:clamp(2.2rem,5.6vw,3.4rem);font-weight:900;letter-spacing:-.04em}
+h2{font-size:clamp(1.45rem,3vw,2rem)}
+h3{font-size:1.02rem;letter-spacing:-.02em;line-height:1.3}
+p{margin:0}
+.eyebrow{display:block;font-size:.68rem;font-weight:600;letter-spacing:.17em;text-transform:uppercase;color:var(--accent)}
+
+/* masthead */
+.topbar{padding-bottom:30px;border-bottom:1px solid var(--ink)}
+.wordmark{font-size:.95rem;font-weight:800;letter-spacing:-.02em;color:var(--accent)}
+
+.hook{padding-block:44px 52px}
+.hook .eyebrow{margin-bottom:18px}
+.hook h1{max-width:17ch}
+.hook .sub{margin-top:20px;font-size:clamp(1rem,1.9vw,1.18rem);line-height:1.5;color:var(--muted);max-width:46ch}
+
+/* grids: fixed counts so rows always fill */
+.g3,.g2{display:grid;gap:34px 30px;margin-top:42px}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+@media (max-width:780px){.g3{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.g3,.g2{grid-template-columns:1fr;gap:28px}}
+
+.item{border-top:1px solid var(--ink);padding-top:18px;display:flex;flex-direction:column;gap:9px}
+.item.rule-soft{border-top-color:var(--hair-dark)}
+.item .ill{width:34px;height:34px;margin-bottom:3px}
+.item .t{font-size:1.02rem;font-weight:700;letter-spacing:-.022em;line-height:1.3}
+.item p{font-size:.9rem;line-height:1.55;color:var(--muted)}
+
+/* the turn */
+.turn{margin-top:46px;padding-top:26px;border-top:2px solid var(--ink)}
+.turn .lead-in{font-size:.68rem;font-weight:600;letter-spacing:.17em;text-transform:uppercase;color:var(--accent)}
+.turn .name{display:block;color:var(--accent);margin-top:12px;font-size:clamp(2.1rem,6vw,3.3rem);font-weight:900;letter-spacing:-.045em;line-height:1}
+.turn .promise{margin-top:16px;font-size:clamp(1rem,1.9vw,1.14rem);line-height:1.5;color:var(--ink-2);max-width:54ch}
+
+.punch{margin-top:44px;background:var(--ink);color:var(--paper);padding:26px 30px;font-size:clamp(1.02rem,2vw,1.2rem);line-height:1.45;font-weight:500;letter-spacing:-.015em}
+.punch b{font-weight:800}
+
+/* sections */
+section{padding-block:46px;border-top:1px solid var(--hair)}
+.sec-head{margin-bottom:24px;max-width:24ch}
+.sec-head .eyebrow{margin-bottom:11px}
+.body-copy{display:flex;flex-direction:column;gap:15px;color:var(--ink-2);max-width:62ch;font-size:.97rem}
+.body-copy strong{color:var(--ink);font-weight:700}
+
+/* platform chips */
+.chips{list-style:none;margin:30px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.chips li{border:1px solid var(--hair-dark);border-radius:999px;padding:7px 15px;font-size:.82rem;font-weight:600;letter-spacing:-.01em}
+
+/* before / after */
+.compare{display:grid;grid-template-columns:repeat(2,1fr);gap:30px;margin-top:8px}
+@media (max-width:640px){.compare{grid-template-columns:1fr}}
+.panel{border-top:1px solid var(--hair-dark);padding-top:18px;display:flex;flex-direction:column;gap:13px}
+.panel.after{border-top:2px solid var(--accent)}
+.panel .ph{font-size:.68rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.panel.after .ph{color:var(--accent)}
+.panel .quote{font-size:1rem;line-height:1.55;font-weight:500;letter-spacing:-.015em;color:var(--muted)}
+.panel.after .quote{color:var(--ink)}
+.panel .note{margin-top:auto;padding-top:13px;font-size:.86rem;line-height:1.5;color:var(--muted)}
+
+.pull{margin-top:32px;font-size:clamp(1.12rem,2.3vw,1.42rem);line-height:1.32;font-weight:800;letter-spacing:-.03em;max-width:30ch}
+
+/* steps */
+.rail{margin-top:8px}
+.step{display:grid;grid-template-columns:3.2rem minmax(0,12rem) minmax(0,1fr);gap:6px 26px;align-items:baseline;padding:20px 0;border-top:1px solid var(--hair)}
+.step:first-child{border-top:1px solid var(--ink)}
+.step .n{font-size:.82rem;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.step .name{font-size:1.02rem;font-weight:700;letter-spacing:-.022em}
+.step .d{font-size:.92rem;line-height:1.55;color:var(--muted)}
+@media (max-width:680px){
+  .step{grid-template-columns:3.2rem minmax(0,1fr);gap:4px 18px}
+  .step .d{grid-column:2}
+}
+
+/* ---- print ---- */
+@page{size:A4 portrait;margin:16mm 15mm}
+@media print{
+  *,*::before,*::after{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-size:10pt;line-height:1.5}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2,.compare{grid-template-columns:repeat(2,1fr)}
+  .item p,.panel .note{font-size:8.6pt;line-height:1.45}
+  .item .t{font-size:9.6pt}
+  .page{max-width:none;padding:0}
+  section{padding-block:20pt}
+  .hook{padding-block:22pt 26pt}
+  .hook h1{font-size:27pt}
+  .hook .sub{font-size:11.5pt}
+  h2{font-size:15pt}
+  .g3,.g2{gap:18pt 20pt;margin-top:22pt}
+  .turn .name{font-size:26pt}
+  .punch{padding:16pt 18pt;font-size:11pt;margin-top:24pt}
+  .pull{font-size:13pt}
+  .item,.panel,.step,.punch,.turn{break-inside:avoid-page}
+  h1,h2,h3,.turn .name,.item .t,.step .name{break-after:avoid-page}
+  .sec-head{break-after:avoid-page}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="topbar"><span class="wordmark">Contrem Analyser</span></div>
+
+  <header class="hook">
+    <span class="eyebrow">Investor brief</span>
+    <h1>You&rsquo;re about to put a product up for sale. Is your listing good enough?</h1>
+    <p class="sub">Most sellers have no idea. They write it, they publish it, and they hope.</p>
+
+    <div class="g3">
+      <div class="item">
+        <svg class="ill" viewBox="0 0 40 40" aria-hidden="true">
+          <path d="M6 14 20 7l14 7v13l-14 7-14-7Z" fill="none" stroke="#111" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M6 14l14 7 14-7M20 21v13" fill="none" stroke="#111" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+        <span class="t">You have a product ready to sell.</span>
+        <p>The listing is written. You&rsquo;re one click from going live.</p>
+      </div>
+      <div class="item">
+        <svg class="ill" viewBox="0 0 40 40" aria-hidden="true">
+          <rect x="6" y="6" width="20" height="26" rx="2" fill="none" stroke="#111" stroke-width="1.8"/>
+          <path d="M11 14h10M11 19h10M11 24h6" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="28" cy="26" r="8" fill="#FFFFFF" stroke="#111" stroke-width="1.8"/>
+          <path d="M25.8 23.7a2.3 2.3 0 1 1 2.2 2.4v1.1" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="28" cy="30" r="1" fill="#111"/>
+        </svg>
+        <span class="t">But nobody tells you if it&rsquo;s any good.</span>
+        <p>Is the wording right? Is anything missing? There is no score, no feedback, nothing.</p>
+      </div>
+      <div class="item">
+        <svg class="ill" viewBox="0 0 40 40" aria-hidden="true">
+          <rect x="4" y="20" width="9" height="13" fill="none" stroke="#111" stroke-width="1.8"/>
+          <rect x="15.5" y="11" width="9" height="22" fill="none" stroke="#111" stroke-width="1.8"/>
+          <rect x="27" y="7" width="9" height="26" fill="none" stroke="#111" stroke-width="1.8"/>
+          <path d="M4 35.5h32" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span class="t">Your competitors sit right beside you.</span>
+        <p>Shoppers compare, then pick one. You lose the sale and never find out why.</p>
+      </div>
+    </div>
+
+    <div class="turn">
+      <span class="lead-in">So before you launch:</span>
+      <span class="name">Contrem Analyser</span>
+      <p class="promise">We pull up the competitors you&rsquo;re really up against, check your listing against them, and tell you exactly what to fix, so you go live ready to sell.</p>
+    </div>
+
+    <div class="g3">
+      <div class="item rule-soft">
+        <svg class="ill" viewBox="0 0 40 40" aria-hidden="true">
+          <rect x="4" y="7" width="11" height="15" rx="2" fill="none" stroke="#111" stroke-width="1.8"/>
+          <rect x="18" y="7" width="11" height="15" rx="2" fill="none" stroke="#111" stroke-width="1.8"/>
+          <circle cx="25" cy="26" r="8" fill="#FFFFFF" stroke="#111" stroke-width="1.8"/>
+          <path d="M31 32l4.5 4.5" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span class="t">We find your competitors</span>
+        <p>The very listings a shopper is weighing yours against, not a generic industry average.</p>
+      </div>
+      <div class="item rule-soft">
+        <svg class="ill" viewBox="0 0 40 40" aria-hidden="true">
+          <rect x="7" y="4" width="26" height="32" rx="2" fill="none" stroke="#111" stroke-width="1.8"/>
+          <path d="M12 12l2 2 4-4" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 12h7" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M12 21l2 2 4-4" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 21h7" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M12.5 27.5l5 5M17.5 27.5l-5 5" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round"/>
+          <path d="M22 30h7" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <span class="t">We show you what&rsquo;s missing</span>
+        <p>Point by point: what the winners say that you don&rsquo;t, and why it matters to a buyer.</p>
+      </div>
+      <div class="item rule-soft">
+        <svg class="ill" viewBox="0 0 40 40" aria-hidden="true">
+          <circle cx="20" cy="15" r="9.5" fill="none" stroke="#111" stroke-width="1.8"/>
+          <path d="M15.6 15l3 3 6.2-6.2" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13.5 23.5l-2.5 12 9-4.5 9 4.5-2.5-12" fill="none" stroke="#111" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+        <span class="t">We get you market ready</span>
+        <p>You get the finished wording back. Paste it in, publish, and compete on an even footing.</p>
+      </div>
+    </div>
+
+    <p class="punch">To make the sale you have to stand above your competitors: better content, written for your customer. <b>We do that for you.</b></p>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Wherever you sell</span>
+      <h2>One tool, every storefront</h2>
+    </div>
+    <div class="body-copy">
+      <p>This is not an Amazon tool. It works on the marketplaces, on a Shopify store, and on a brand&rsquo;s own website, and it knows that <strong>each one plays by different rules.</strong> A listing that wins in one place is written differently from one that wins in another, so we judge it by the standards of the place it is actually being sold.</p>
+    </div>
+    <ul class="chips">
+      <li>Amazon</li><li>eBay</li><li>Walmart</li><li>Etsy</li><li>Shopify</li>
+      <li>Target</li><li>Best Buy</li><li>AliExpress</li><li>iHerb</li>
+      <li>Daraz</li><li>Noon</li><li>Your own store</li>
+    </ul>
+    <div class="g3">
+      <div class="item rule-soft">
+        <span class="t">eBay</span>
+        <p>Titles stop at eighty characters and there are no bullet points, so the whole sale has to be made in the description.</p>
+      </div>
+      <div class="item rule-soft">
+        <span class="t">Amazon</span>
+        <p>The richest content is pictures, not text, so an empty description is normal here, and marking it as a failing would be wrong.</p>
+      </div>
+      <div class="item rule-soft">
+        <span class="t">Shopify and brand sites</span>
+        <p>Short product names and flowing prose, not a bullet list. Judged the marketplace way, a good brand page would look broken.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">The problem</span>
+      <h2>Why guessing costs them the sale</h2>
+    </div>
+    <div class="body-copy">
+      <p>A seller who wants this done properly hires a listing consultant. That is expensive, slow, and impossible to repeat across a whole catalogue. So most sellers reach for software instead, and the software tells them to &ldquo;add more keywords,&rdquo; which nobody can actually act on.</p>
+      <p>Underneath both failures sits the same difficulty: <strong>what makes a listing good is different in every category.</strong> A supplement sells on ingredient quality and proof of testing. A skincare serum sells on what is in it, the evidence behind it, and how it feels on the skin. Software that judges both the same way is judging neither, which is exactly why generic tools give generic advice.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">The value</span>
+      <h2>What the seller actually gets</h2>
+    </div>
+    <div class="g3" style="margin-top:0">
+      <div class="item rule-soft">
+        <span class="t">Expertise on demand</span>
+        <p>A specialist-grade listing review, available the moment the seller wants one, on any product in the catalogue. No booking, no brief, no waiting for a turnaround.</p>
+      </div>
+      <div class="item rule-soft">
+        <span class="t">Their blind spots, named</span>
+        <p>The listing is measured against what the best sellers in that exact category are doing. The seller sees the specific things their competitors say that they do not.</p>
+      </div>
+      <div class="item rule-soft">
+        <span class="t">Copy, not advice</span>
+        <p>Every recommendation arrives as finished wording the seller can paste straight into their store, plus the reason it works, backed by what the category leaders are already doing.</p>
+      </div>
+      <div class="item rule-soft">
+        <span class="t">A choice of voice</span>
+        <p>Three complete rewrites for three different channels: one built for search ranking, one for brand storytelling, one for categories where trust is the barrier to purchase.</p>
+      </div>
+      <div class="item rule-soft">
+        <span class="t">Category intelligence</span>
+        <p>Scoring is tuned to the category in question, so the advice is what wins in <em>that</em> market, not universal best practice that applies to nothing in particular.</p>
+      </div>
+      <div class="item rule-soft">
+        <span class="t">Catalogue-wide reach</span>
+        <p>The same review can run across an entire product range, which turns listing quality from a project a brand occasionally commissions into something they manage continuously.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">What it looks like</span>
+      <h2>The difference it makes</h2>
+    </div>
+    <div class="body-copy" style="margin-bottom:30px">
+      <p>A new supplement brand lists a magnesium product and writes the bare minimum, because they do not know what matters in their category.</p>
+    </div>
+    <div class="compare">
+      <div class="panel">
+        <span class="ph">As the seller wrote it</span>
+        <p class="quote">&ldquo;Magnesium supplement capsules. Take daily for health support.&rdquo;</p>
+        <p class="note">Says nothing a buyer can choose on. Every competitor on the page answers questions this listing does not raise.</p>
+      </div>
+      <div class="panel after">
+        <span class="ph">As Contrem Analyser rewrites it</span>
+        <p class="quote">&ldquo;Chelated magnesium glycinate: the most bioavailable form, and gentle enough on the stomach to take at full strength. Third-party tested, made in a GMP-certified facility.&rdquo;</p>
+        <p class="note">Ingredient form, absorption, tolerability and proof of testing: the four things buyers in this category actually compare on.</p>
+      </div>
+    </div>
+    <p class="pull">This is the difference between a listing buyers scroll past and one they choose.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">How it works</span>
+      <h2>Three steps, and the seller does one of them</h2>
+    </div>
+    <div class="body-copy" style="margin-bottom:30px">
+      <p>There is nothing for the seller to learn and nothing to set up. They hand us what they have already written, and we hand back what to do about it.</p>
+    </div>
+    <div class="rail">
+      <div class="step"><span class="n">01</span><span class="name">They paste it in</span><span class="d">Their title, bullets and description, exactly as they were going to publish them</span></div>
+      <div class="step"><span class="n">02</span><span class="name">We do the homework</span><span class="d">We pull up the products they are really competing with and study what is working for those sellers</span></div>
+      <div class="step"><span class="n">03</span><span class="name">They get it back, fixed</span><span class="d">What is missing and why it costs them sales, plus three finished versions of their listing, ready to publish</span></div>
+    </div>
+    <p class="pull">It takes about as long as making a cup of tea, and it runs on every product they sell.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="eyebrow">Why it holds</span>
+      <h2>Why this is hard to copy</h2>
+    </div>
+    <div class="body-copy">
+      <p>The clever technology is the easy part. Anyone can buy that. What is hard to copy is knowing what a good listing looks like in a particular market, and being able to show that our verdict is consistent and trustworthy.</p>
+    </div>
+    <div class="g2">
+      <div class="item rule-soft">
+        <span class="t">Category expertise, written down</span>
+        <p>Each product category has its own standards, built by hand and weighted by what matters in that market. This is the accumulated judgement an expert consultant carries in their head, captured once and then applied to every seller in that category at no extra effort.</p>
+      </div>
+      <div class="item rule-soft">
+        <span class="t">Judgement that is tested</span>
+        <p>The product&rsquo;s promise is a verdict on someone&rsquo;s listing, so the verdict itself is put under test: the same listing must be graded the same way twice, and strong listings must consistently outrank weak ones. That testing runs before every change ships.</p>
+      </div>
+      <div class="item rule-soft">
+        <span class="t">It improves without rebuilding</span>
+        <p>Testing surfaced where inconsistent judgement comes from, and the fix turned out to be how the standards are worded, not how the software is built. Every category added from here is written correctly from the start, and gets sharper as the library grows.</p>
+      </div>
+      <div class="item rule-soft">
+        <span class="t">Built to sell, not just to demo</span>
+        <p>Customer sign-ups, secure access and cost controls are already in place, so we can put this in front of paying customers rather than go back and build the business side from scratch.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

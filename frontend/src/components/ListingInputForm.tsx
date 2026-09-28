@@ -185,10 +185,15 @@ export default function ListingInputForm({ onSubmit, isLoading }: Props) {
               }
               className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-white text-sm focus:outline-none focus:border-[var(--accent)]"
             >
+              <option value="auto">Detect automatically</option>
               <option value="amazon">Amazon</option>
-              <option value="shopify">Shopify</option>
-              <option value="daraz">Daraz</option>
-              <option value="generic">Generic / Other</option>
+              <option value="walmart">Walmart</option>
+              <option value="ebay">eBay</option>
+              <option value="etsy">Etsy</option>
+              <option value="target">Target</option>
+              <option value="shopify">Shopify store</option>
+              <option value="dtc">My own brand site</option>
+              <option value="generic">Other</option>
             </select>
           </div>
           <div>

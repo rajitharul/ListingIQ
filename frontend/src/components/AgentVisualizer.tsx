@@ -17,12 +17,14 @@ interface NodeLayout {
 const NODE_META: Record<string, NodeLayout> = {
   input_parser:          { label: "Input Parser",          x: 400, y: 60,   description: "Extracts entities, ingredients, certifications, and claims from your listing" },
   category_classifier:   { label: "Category Classifier",   x: 400, y: 150,  description: "Identifies product vertical and subcategory, loads scoring rubric" },
-  competitor_scout:      { label: "Competitor Scout",      x: 400, y: 240,  description: "Researches top 10 competitor listings in the subcategory" },
+  competitor_scout:      { label: "Competitor Scout",      x: 400, y: 240,  description: "Finds real competitors across platforms and reads their pages" },
   competitor_analyzer:   { label: "Competitor Analyzer",   x: 400, y: 330,  description: "Extracts keyword patterns, claim frequency, trust signals from competitors" },
-  listing_analyzer:      { label: "Listing Analyzer",      x: 400, y: 420,  description: "Evaluates your listing per rubric dimension — present/missing, evidence, completeness" },
-  benchmark_scorer:      { label: "Benchmark Scorer",      x: 400, y: 510,  description: "Scores your listing 0-10 per dimension against competitor benchmarks" },
-  recommendation_engine: { label: "Recommendation Engine", x: 400, y: 600,  description: "Generates prioritized recommendations with specific copy and competitive evidence" },
-  rewrite_generator:     { label: "Rewrite Generator",     x: 400, y: 690,  description: "Creates 3 optimized rewrite variants — keyword, benefit-led, trust-forward" },
+  competitor_scorer:     { label: "Competitor Scorer",     x: 400, y: 420,  description: "Scores every fetched competitor on the same rubric, so the benchmark is measured rather than estimated" },
+  listing_analyzer:      { label: "Listing Analyzer",      x: 400, y: 500,  description: "Evaluates your listing per rubric dimension — present/missing, evidence, completeness" },
+  benchmark_scorer:      { label: "Benchmark Scorer",      x: 400, y: 580,  description: "Scores your listing 0-10 per dimension against competitor benchmarks" },
+  recommendation_engine: { label: "Recommendation Engine", x: 400, y: 660,  description: "Generates prioritized recommendations with specific copy and competitive evidence" },
+  rewrite_generator:     { label: "Rewrite Generator",     x: 400, y: 740,  description: "Creates 3 optimized rewrite variants — keyword, benefit-led, trust-forward" },
+  rewrite_verifier:      { label: "Rewrite Verifier",      x: 400, y: 820,  description: "Re-scores each variant through the same scorer used on competitors, so its score is measured rather than self-reported" },
 };
 
 interface Edge {
@@ -35,15 +37,17 @@ const EDGES: Edge[] = [
   { from: "input_parser", to: "category_classifier" },
   { from: "category_classifier", to: "competitor_scout" },
   { from: "competitor_scout", to: "competitor_analyzer" },
-  { from: "competitor_analyzer", to: "listing_analyzer" },
+  { from: "competitor_analyzer", to: "competitor_scorer" },
+  { from: "competitor_scorer", to: "listing_analyzer" },
   { from: "listing_analyzer", to: "benchmark_scorer" },
   { from: "benchmark_scorer", to: "recommendation_engine" },
   { from: "recommendation_engine", to: "rewrite_generator" },
-  { from: "rewrite_generator", to: "END" },
+  { from: "rewrite_generator", to: "rewrite_verifier" },
+  { from: "rewrite_verifier", to: "END" },
 ];
 
 const START_POS = { x: 400, y: 15 };
-const END_POS = { x: 400, y: 750 };
+const END_POS = { x: 400, y: 880 };
 
 function getNodeColor(node: AgentNodeTrace): string {
   if (node.status === "skipped") return "var(--card-border)";
@@ -120,7 +124,7 @@ export default function AgentVisualizer({ trace }: Props) {
           {/* SVG Graph */}
           <div className="relative overflow-x-auto">
             <svg
-              viewBox="0 0 800 790"
+              viewBox="0 0 800 920"
               className="w-full max-w-3xl mx-auto"
               style={{ minWidth: 500 }}
             >

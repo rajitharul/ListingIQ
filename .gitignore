@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!.env.local.example
 *.local
 
 # ── Python ────────────────────────────────────────
@@ -22,10 +23,22 @@ node_modules/
 out/
 package-lock.json
 
+# ── Eval results ──────────────────────────────────
+# Raw eval output is data, not source. Commit a baseline worth keeping with
+# `git add -f evals/results/<file>.json`.
+backend/evals/results/
+
 # ── SQLite / Data ─────────────────────────────────
 *.db
 *.sqlite
 *.sqlite3
+# Database backups. `*.db` does not match `auth.db.bak.<timestamp>`, and these
+# hold password and session hashes.
+*.db.bak*
+
+# ── Runtime logs & build artifacts ────────────────
+.logs/
+*.tsbuildinfo
 
 # ── IDE / OS ──────────────────────────────────────
 .vscode/

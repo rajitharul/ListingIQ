@@ -50,7 +50,7 @@
       "name": "Certifications",
       "weight": 0.08,
       "description": "Are vegan, cruelty-free, fragrance-free, non-comedogenic stated?",
-      "scoring_criteria": "0: None. 5: Some. 10: Comprehensive."
+      "scoring_criteria": "0: None stated. 3: 1 certification or free-from claim. 5: 2-3 stated. 7: Comprehensive 'free-from' list covering fragrance, parabens and common irritants. 10: Full certification suite with cruelty-free + vegan + non-comedogenic confirmation."
     },
     {
       "name": "Clinical Backing",

@@ -4,7 +4,22 @@ import type {
   FeedbackEntry,
 } from "@/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Same-origin by default: requests go to the Next route handler in
+// src/app/api/[...path]/route.ts, which attaches the server-side API key
+// before forwarding to the backend. The key must never be exposed here.
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+
+/** Pull the backend's `detail` out of an error body, falling back to raw text. */
+async function errorMessage(res: Response): Promise<string> {
+  const text = await res.text();
+  try {
+    const parsed = JSON.parse(text);
+    if (typeof parsed?.detail === "string") return parsed.detail;
+  } catch {
+    // Not JSON — fall through to the raw body.
+  }
+  return text || `Request failed with status ${res.status}`;
+}
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -12,8 +27,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
   });
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`API Error ${res.status}: ${err}`);
+    throw new Error(await errorMessage(res));
   }
   return res.json();
 }
@@ -70,8 +84,10 @@ export function runPipelineStream(
     })
       .then((res) => {
         if (!res.ok) {
-          return res.text().then((t) => {
-            throw new Error(`API Error ${res.status}: ${t}`);
+          // Auth and quota rejections arrive here as a normal JSON response,
+          // because admission is checked before the stream opens.
+          return errorMessage(res).then((m) => {
+            throw new Error(m);
           });
         }
         const reader = res.body?.getReader();

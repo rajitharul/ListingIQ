@@ -15,7 +15,7 @@ const PIPELINE_STEPS = [
   },
   {
     agent: "Competitor Scout",
-    description: "Researching top 10 competitor listings in your subcategory...",
+    description: "Searching the web for competitors on any platform...",
     nodeKey: "competitor_scout",
   },
   {
@@ -27,6 +27,11 @@ const PIPELINE_STEPS = [
     agent: "Competitor Analyzer",
     description: "Extracting keyword patterns, claim frequency, and trust signals...",
     nodeKey: "competitor_analyzer",
+  },
+  {
+    agent: "Competitor Scorer",
+    description: "Scoring every readable competitor on the rubric to measure the benchmark...",
+    nodeKey: "competitor_scorer",
   },
   {
     agent: "Benchmark Scorer",
@@ -42,6 +47,11 @@ const PIPELINE_STEPS = [
     agent: "Rewrite Generator",
     description: "Creating 3 optimized listing variants — keyword, benefit-led, trust-forward...",
     nodeKey: "rewrite_generator",
+  },
+  {
+    agent: "Rewrite Verifier",
+    description: "Re-scoring each rewrite so its score is measured, not self-reported...",
+    nodeKey: "rewrite_verifier",
   },
 ];
 

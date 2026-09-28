@@ -13,10 +13,42 @@ class ListingInput(BaseModel):
     """User-submitted product listing to analyze."""
     product_title: str = Field(..., description="Product title, e.g. 'Magnesium Glycinate 200mg, 60 Capsules'")
     product_description: str = Field("", description="Full product description text")
-    bullet_points: list[str] = Field(default_factory=list, description="Bullet point list (Amazon-style)")
+    bullet_points: list[str] = Field(default_factory=list, description="Bullet points, where the platform has them")
     brand_name: str = Field("", description="Brand name, e.g. 'Nature Made'")
-    platform: str = Field("amazon", description="Platform: amazon | shopify | daraz | generic")
+    platform: str = Field(
+        "auto", description="auto | amazon | walmart | ebay | etsy | shopify | dtc | generic")
     target_audience: str = Field("", description="Optional target audience context")
+    listing_url: str = Field(
+        "", description="Optional: the listing's own URL, used to prefill the fields above")
+
+
+class OwnListingSource(BaseModel):
+    """
+    Where the user's own listing came from, when it was read from a URL.
+
+    Recorded and shown rather than applied silently: a customer should be able
+    to see what we read off their page, and correct it, before it becomes the
+    basis of every score in the report.
+    """
+    url: str = ""
+    platform_detected: str = ""
+    status: str = Field("none", description="extracted | failed | none")
+    note: str = ""
+    fetched_at: str = ""
+    fields_filled: list[str] = Field(
+        default_factory=list, description="Which fields were taken from the page")
+
+
+class ExtractListingRequest(BaseModel):
+    """Read a product page into a listing."""
+    url: str = Field(..., description="The product page to read")
+    listing: ListingInput | None = Field(
+        None, description="Anything already filled in; those fields are preserved")
+
+
+class ExtractListingResponse(BaseModel):
+    listing: ListingInput
+    source: OwnListingSource
 
 
 # ── PARSED INPUT (Agent 1: Input Parser output) ─────────────────
@@ -70,9 +102,16 @@ class ScoringRubric(BaseModel):
 
 # ── COMPETITOR MODELS (Agent 3: Competitor Scout output) ─────────
 
+# Data sources that represent something actually observed on the open web or a
+# marketplace. Anything not named here is treated as an estimate.
+LIVE_DATA_SOURCES: frozenset[str] = frozenset({
+    "rainforest_api",
+    "web_search",
+})
+
 class CompetitorListing(BaseModel):
     """A single competitor product listing."""
-    rank: int = Field(0, description="Rank 1-10 by sales/relevance")
+    rank: int = Field(0, description="Rank in the competitive set, 1 is strongest")
     title: str = Field(..., description="Product title")
     description: str = Field("", description="Product description")
     bullet_points: list[str] = Field(default_factory=list, description="Bullet points")
@@ -80,32 +119,85 @@ class CompetitorListing(BaseModel):
     price: str = Field("", description="Price as string, e.g. '$24.99'")
     rating: float = Field(0.0, ge=0.0, le=5.0, description="Star rating")
     review_count: int = Field(0, description="Number of reviews")
-    badges: list[str] = Field(default_factory=list, description="Badges: Amazon's Choice, Best Seller, etc.")
+    badges: list[str] = Field(default_factory=list, description="Marketplace badges, e.g. Best Seller")
     url: str = Field("", description="Listing URL (empty for LLM-sourced data)")
+
+    # Per-listing provenance. A competitor set can now span several platforms,
+    # so "where did this one come from" has to travel with the listing rather
+    # than being implied by the parent result.
+    platform: str = Field("", description="Platform slug detected from the URL")
+    merchant: str = Field("", description="Storefront or seller, as reported by discovery")
+    domain: str = Field("", description="Registrable domain, for grouping and display")
+    source_position: int = Field(0, description="Position within the discovery result it came from")
+    extraction_status: str = Field(
+        "none", description="extracted | discovery_only | failed | none")
+    extraction_note: str = Field("", description="Why extraction was partial or failed")
+    counts_toward_benchmark: bool = Field(
+        True, description="Has enough real copy to be scored fairly")
 
 
 class CompetitorScoutResult(BaseModel):
-    """Result from the Competitor Scout agent."""
+    """
+    Result from the Competitor Scout agent.
+
+    Provenance is part of the contract, not a debugging aid: the UI uses it to
+    tell buyers whether they are looking at observed marketplace data or a
+    model's estimate. Never set `data_source` to a live provider for data that
+    was not actually fetched from it.
+    """
     listings: list[CompetitorListing]
-    search_query: str = Field("", description="Search query used to find competitors")
-    platform: str = Field("amazon", description="Platform searched")
-    data_source: str = Field("llm_knowledge", description="llm_knowledge | rainforest_api | scraping")
+    search_query: str = Field("", description="Primary search query used to find competitors")
+    platform: str = Field("", description="The user's own platform — the primary cohort")
+    data_source: str = Field("llm_knowledge", description="llm_knowledge | rainforest_api | web_search")
+    fetched_at: str = Field("", description="ISO timestamp of the fetch, empty if unknown")
+    from_cache: bool = Field(False, description="Served from the competitor cache")
+    provider_note: str = Field("", description="Why this source was used, e.g. a fallback reason")
+
+    # A mixed result set needs to say what the mix was.
+    platform_breakdown: dict = Field(
+        default_factory=dict, description="platform slug -> count; sums to len(listings)")
+    queries: list[str] = Field(default_factory=list, description="Every query actually issued")
+    discovery_source: str = Field("", description="Which discovery channels were used")
+    extraction_source: str = Field("", description="Which extractor read the pages")
+    extracted_count: int = Field(0, description="Listings whose page was read in full")
+    discovery_only_count: int = Field(0, description="Listings with search metadata only")
+    failed_count: int = Field(0, description="Listings whose extraction produced nothing usable")
+
+    @property
+    def is_live_data(self) -> bool:
+        """
+        True only for data actually observed.
+
+        An explicit allowlist, deliberately. This used to be a denylist
+        (`not in ("", "llm_knowledge")`), which meant any new provider was
+        labelled *live* by default and inherited the green "observed data"
+        treatment in the UI without anyone choosing that. Failing closed means
+        a provider that forgets to register here is called estimated — visible,
+        conservative, and caught by a test.
+        """
+        return self.data_source in LIVE_DATA_SOURCES
 
 
 # ── COMPETITOR ANALYSIS MODELS (Agent 4: Competitor Analyzer) ────
 
 class KeywordPattern(BaseModel):
-    """A keyword pattern found across competitor listings."""
+    """
+    A keyword found across competitor listings.
+
+    `frequency` is counted in Python by matching the phrase on word boundaries,
+    not estimated — it appears in customer-facing evidence and has to be true.
+    """
     keyword: str
-    frequency: int = Field(0, description="How many of 10 listings use this keyword")
+    frequency: int = Field(0, description="Listings containing this keyword (counted)")
     position: str = Field("title", description="Where it appears: title | bullets | description")
 
 
 class ClaimPattern(BaseModel):
-    """A claim pattern found across competitor listings."""
+    """A claim found across competitor listings, with the brands that make it."""
     claim: str
-    frequency: int = Field(0, description="How many of 10 listings make this claim")
+    frequency: int = Field(0, description="Listings making this claim (counted from attribution)")
     example_brand: str = Field("", description="Example brand using this claim")
+    brands: list[str] = Field(default_factory=list, description="Every brand making the claim")
 
 
 class CompetitorAnalysis(BaseModel):
@@ -137,6 +229,107 @@ class ListingAnalysis(BaseModel):
     present_dimensions: list[str] = Field(default_factory=list, description="Dimensions addressed")
 
 
+# ── COMPETITOR BENCHMARK (Agent: Competitor Scorer) ─────────────
+
+class CompetitorDimensionStat(BaseModel):
+    """
+    Measured distribution of competitor scores on one rubric dimension.
+
+    These are computed in Python from the competitors' own scores — not
+    estimated. `mean` is what the user's listing is benchmarked against, so it
+    has to be a real average of real listings or the whole comparison is
+    theatre.
+    """
+    dimension: str
+    mean: float = Field(0.0, description="Arithmetic mean of the competitors' scores")
+    best: float = Field(0.0, description="Highest competitor score on this dimension")
+    worst: float = Field(0.0, description="Lowest competitor score on this dimension")
+    n: int = Field(0, description="How many competitors were scored")
+
+
+class CompetitorScoreRow(BaseModel):
+    """One competitor's scores across every rubric dimension."""
+    rank: int = 0
+    brand_name: str = ""
+    title: str = ""
+    platform: str = Field("", description="Platform this competitor was found on")
+    overall_score: float = Field(0.0, description="Weighted overall, computed the same way as the user's")
+    dimension_scores: dict = Field(default_factory=dict, description="dimension name -> score")
+
+
+class CompetitorBenchmark(BaseModel):
+    """
+    The measured benchmark the user's listing is scored against.
+
+    Built by scoring each fetched competitor on the same rubric, then
+    aggregating in Python. Cached per subcategory because it depends only on the
+    competitor set and the rubric, not on the user's listing.
+    """
+    dimensions: list[CompetitorDimensionStat] = Field(default_factory=list)
+    competitors: list[CompetitorScoreRow] = Field(default_factory=list)
+    overall_mean: float = Field(0.0, description="Mean of the competitors' overall scores")
+    rubric_version: str = ""
+    from_cache: bool = False
+
+    cohort: str = Field(
+        "all_competitors", description="same_platform | all_competitors")
+    platforms: list[str] = Field(
+        default_factory=list, description="Platform slugs represented in this cohort")
+    data_source: str = Field("", description="Provenance of the competitors that were scored")
+    # A plain field rather than a property: a benchmark is rebuilt from cached
+    # JSON, so it must carry this fact rather than re-derive it from a
+    # `data_source` string that an older payload may not have.
+    is_live_data: bool = Field(
+        False, description="Whether the scored competitors were observed, not estimated")
+
+    def mean_for(self, dimension: str) -> float | None:
+        for d in self.dimensions:
+            if d.dimension == dimension:
+                return d.mean
+        return None
+
+    def percentile_for(self, score: float) -> int:
+        """
+        Where `score` sits among the competitors, 0-100.
+
+        Measured by counting how many competitors it beats, rather than asking
+        a model to guess a percentile.
+        """
+        scores = [c.overall_score for c in self.competitors]
+        if not scores:
+            return 0
+        beaten = sum(1 for s in scores if score > s)
+        ties = sum(1 for s in scores if abs(s - score) < 1e-9)
+        return round((beaten + 0.5 * ties) / len(scores) * 100)
+
+
+class CompetitorBenchmarkSet(BaseModel):
+    """
+    Both cohorts, computed from one set of scored competitors.
+
+    A competitive set that spans platforms cannot be averaged into one number
+    honestly: a 200-character keyword-stacked marketplace title and a brand
+    site's 40-character product name are good listings by different rules, and
+    pooling them measures house style rather than quality.
+
+    So the same scored rows are aggregated twice — `same_platform` for the
+    headline, `all_competitors` for category context. Both are real; neither is
+    an extra LLM call. They are cached together because they are computed
+    together, and a half-populated pair would be worse than none.
+    """
+    same_platform: CompetitorBenchmark = Field(default_factory=CompetitorBenchmark)
+    all_competitors: CompetitorBenchmark = Field(default_factory=CompetitorBenchmark)
+    # Which cohort the headline percentile should use. Falls back to
+    # all_competitors when the same-platform cohort is too small to mean anything.
+    primary_cohort: str = Field("same_platform", description="same_platform | all_competitors")
+    note: str = Field("", description="Why the primary cohort was chosen")
+
+    @property
+    def primary(self) -> CompetitorBenchmark:
+        return (self.same_platform if self.primary_cohort == "same_platform"
+                else self.all_competitors)
+
+
 # ── SCORING MODELS (Agent 6: Benchmark Scorer) ──────────────────
 
 class DimensionScore(BaseModel):
@@ -155,8 +348,18 @@ class ListingScore(BaseModel):
     """Complete scoring result for the user's listing."""
     overall_score: float = Field(0.0, description="Weighted average score")
     dimension_scores: list[DimensionScore] = Field(default_factory=list)
-    percentile: int = Field(0, description="Where user ranks vs 10 competitors (0-100)")
+    percentile: int = Field(0, description="Where the listing ranks in the headline cohort (0-100)")
     gap_analysis: list[dict] = Field(default_factory=list, description="Gaps sorted by impact (gap * weight)")
+
+    # Which cohort the headline percentile was measured against, and how big it
+    # was. Shown to the user: "top 18% of 11 competitors" is a claim that can be
+    # checked, an unqualified percentile is not.
+    percentile_basis: str = Field(
+        "same_platform", description="same_platform | all_competitors")
+    percentile_cohort_n: int = Field(0, description="Competitors in the headline cohort")
+    category_percentile: int = Field(
+        0, description="Percentile against every competitor found, across platforms")
+    category_cohort_n: int = Field(0, description="Competitors in the category cohort")
 
 
 # ── RECOMMENDATION MODELS (Agent 7: Recommendation Engine) ──────
@@ -189,15 +392,29 @@ class ListingRewrite(BaseModel):
     title: str = Field("")
     bullet_points: list[str] = Field(default_factory=list)
     description: str = Field("")
-    expected_score: float = Field(0.0, description="Projected overall score for this variant")
+    expected_score: float = Field(
+        0.0, description="The generator's own projection — kept for comparison, not authoritative")
     key_changes: list[str] = Field(default_factory=list, description="What was changed and why")
+
+    # Measured by re-scoring the variant through the same scorer that grades the
+    # competitors. `is_verified` is false when scoring failed, in which case
+    # there is no measured number rather than a fabricated one.
+    measured_score: float = Field(0.0, description="Score measured by re-scoring this variant")
+    measured_percentile: int = Field(0, description="Rank against the measured competitor set")
+    measured_category_percentile: int = Field(
+        0, description="Percentile against every competitor found, across platforms")
+    measured_dimension_scores: dict = Field(default_factory=dict)
+    is_verified: bool = Field(False, description="Whether measured_score is real")
 
 
 class RewriteResult(BaseModel):
     """All rewrite variants."""
     variants: list[ListingRewrite] = Field(default_factory=list)
     original_score: float = Field(0.0)
-    best_variant_score: float = Field(0.0)
+    best_variant_score: float = Field(
+        0.0, description="Best MEASURED score once verified; the projection before that")
+    scores_verified: bool = Field(
+        False, description="True once variants have been re-scored rather than self-reported")
 
 
 # ── AGENT TRACE MODELS ──────────────────────────────────────────
@@ -240,6 +457,53 @@ class MemoryEntry(BaseModel):
     confidence: float = 1.0
 
 
+# ── ACCOUNT & AUTH MODELS ───────────────────────────────────────
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class AccountOut(BaseModel):
+    """An account as returned by the API. Never carries password material."""
+    account_id: str
+    email: str
+    role: str = Field("member", description="admin | member")
+    active: bool = True
+    rpm_limit: int
+    max_concurrent: int
+    daily_token_limit: int
+    created_at: str
+    last_login_at: str | None = None
+
+
+class CreateAccountRequest(BaseModel):
+    email: str
+    password: str
+    role: str = Field("member", description="admin | member")
+    rpm_limit: int | None = None
+    max_concurrent: int | None = None
+    daily_token_limit: int | None = None
+
+
+class UpdateAccountRequest(BaseModel):
+    """All fields optional; only those supplied are changed."""
+    role: str | None = None
+    active: bool | None = None
+    rpm_limit: int | None = None
+    max_concurrent: int | None = None
+    daily_token_limit: int | None = None
+
+
+class SetPasswordRequest(BaseModel):
+    password: str
+
+
+class CreateKeyRequest(BaseModel):
+    account_id: str
+    label: str
+
+
 # ── PIPELINE REQUEST/RESPONSE ───────────────────────────────────
 
 class FullPipelineRequest(BaseModel):
@@ -255,6 +519,12 @@ class FullPipelineResponse(BaseModel):
     rubric: ScoringRubric
     competitors: CompetitorScoutResult
     competitor_analysis: CompetitorAnalysis
+    competitor_benchmark: CompetitorBenchmark = Field(
+        default_factory=lambda: CompetitorBenchmark(),
+        description="The cohort the headline score is measured against")
+    competitor_benchmark_all: CompetitorBenchmark = Field(
+        default_factory=lambda: CompetitorBenchmark(),
+        description="Every competitor found, across platforms — context for the headline")
     listing_analysis: ListingAnalysis
     scores: ListingScore
     recommendations: RecommendationResult

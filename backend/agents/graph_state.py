@@ -13,6 +13,8 @@ from models.schemas import (
     ScoringRubric,
     CompetitorScoutResult,
     CompetitorAnalysis,
+    CompetitorBenchmark,
+    CompetitorBenchmarkSet,
     ListingAnalysis,
     ListingScore,
     RecommendationResult,
@@ -43,6 +45,14 @@ class ListingIQState(TypedDict, total=False):
 
     # ── Agent 4: Competitor Analyzer → ───────────────────────────
     competitor_analysis: CompetitorAnalysis
+
+    # ── Competitor Scorer → measured benchmark ───────────────────
+    # The cohort that drives the headline score — same-platform where there are
+    # enough of them, the whole category where there are not.
+    competitor_benchmark: CompetitorBenchmark
+    # Every competitor found, across platforms. Context for the headline.
+    competitor_benchmark_all: CompetitorBenchmark
+    benchmark_cohorts: CompetitorBenchmarkSet
 
     # ── Agent 5: Listing Analyzer → (parallel branch) ────────────
     listing_analysis: ListingAnalysis

@@ -1,12 +1,13 @@
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
-openai>=2.26.0
+openai==2.30.0
 pydantic>=2.10.4
 python-dotenv==1.0.1
 httpx>=0.28.1
 langgraph>=0.2.60
 langchain-openai>=0.3.0
 langchain-core>=0.3.25
+langsmith>=0.7.23
 aiosqlite>=0.20.0
 sse-starlette>=2.0.0
 beautifulsoup4>=4.12.0

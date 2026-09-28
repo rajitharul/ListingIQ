@@ -8,7 +8,6 @@ from __future__ import annotations
 import json
 import logging
 import time
-from config import OPENAI_MODEL
 from models.schemas import (
     ListingScore,
     CompetitorAnalysis,
@@ -17,7 +16,8 @@ from models.schemas import (
     Recommendation,
     RecommendationResult,
 )
-from agents.llm_client import logged_chat_completion
+from models.llm_responses import RecommendationResultOut, clamp
+from agents.llm_client import structured_completion
 
 log = logging.getLogger("listingiq.agent.recommendation_engine")
 
@@ -37,16 +37,25 @@ async def generate_recommendations(
         if ds.weaknesses:
             scores_text += f"\n    Weaknesses: {', '.join(ds.weaknesses)}"
 
-    # Build competitive context
+    # Thresholds are proportional, not absolute. "6 competitors do this" was a
+    # majority when the set was always 10; against a set of 7 it is a
+    # supermajority, and against a set of 20 it is a minority being reported to
+    # the customer as what the market does.
+    n_competitors = int(
+        (competitor_analysis.structural_patterns or {}).get("listings_counted") or 0
+    ) or 10
+
     kw_missing = []
     for kp in competitor_analysis.keyword_patterns:
-        if kp.frequency >= 6:
-            kw_missing.append(f"'{kp.keyword}' ({kp.frequency}/10 competitors use it)")
+        if kp.frequency >= 0.6 * n_competitors:
+            kw_missing.append(
+                f"'{kp.keyword}' ({kp.frequency}/{n_competitors} competitors use it)")
 
     claims_missing = []
     for cp in competitor_analysis.claim_patterns:
-        if cp.frequency >= 5:
-            claims_missing.append(f"'{cp.claim}' ({cp.frequency}/10 competitors make this claim)")
+        if cp.frequency >= 0.5 * n_competitors:
+            claims_missing.append(
+                f"'{cp.claim}' ({cp.frequency}/{n_competitors} competitors make this claim)")
 
     # Current listing
     bullets_text = "\n".join(f"  - {b}" for b in parsed_listing.original_bullets) if parsed_listing.original_bullets else "  (no bullets)"
@@ -75,7 +84,10 @@ TASK: Generate specific recommendations. Each recommendation must include:
 2. Current score and projected score after implementing
 3. Impact level (high/medium/low)
 4. SPECIFIC COPY to add or change — not vague advice, but actual text the brand can copy-paste
-5. Competitive evidence justifying why this matters
+5. evidence_pattern: the exact keyword, claim or trust signal from COMPETITIVE
+   CONTEXT above that justifies this, copied verbatim. Do NOT write a sentence
+   and do NOT state any count — the frequency is measured and added afterwards.
+   Leave it empty if no listed pattern applies.
 6. Expected lift description
 
 Prioritize by impact (gap_size × weight). Generate 5-8 recommendations total.
@@ -84,43 +96,59 @@ Also separate into:
 - quick_wins: 2-3 easiest improvements (small effort, meaningful impact)
 - strategic_moves: 2-3 bigger improvements (more effort, larger impact)
 
-Return a JSON object:
-{{
-  "recommendations": [
-    {{
-      "priority": 1,
-      "dimension": "Form Specificity",
-      "current_score": 3.5,
-      "projected_score": 7.0,
-      "impact": "high",
-      "specific_copy": "Add to bullet: 'Magnesium Glycinate (chelated) — the most bioavailable and gentle form, absorbed 2x better than magnesium oxide with zero digestive discomfort'",
-      "competitive_evidence": "9/10 top competitors explain their magnesium form and its benefits",
-      "expected_lift": "+3.5 points on Form Specificity, contributing +0.53 to overall score"
-    }}
-  ],
-  "quick_wins": [{{...}}],
-  "strategic_moves": [{{...}}]
-}}
+Set impact to exactly one of: high, medium, low. Scores run from 0.0 to 10.0.
+quick_wins and strategic_moves each re-state entries drawn from recommendations."""
 
-Return ONLY valid JSON."""
-
-    response = await logged_chat_completion(
-        model=OPENAI_MODEL,
+    out = await structured_completion(
+        response_model=RecommendationResultOut,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
-        response_format={"type": "json_object"},
+        max_completion_tokens=6000,
         caller="recommendation_engine.generate",
     )
-    data = json.loads(response.choices[0].message.content)
 
-    recommendations = [Recommendation(**r) for r in data.get("recommendations", [])]
-    quick_wins = [Recommendation(**r) for r in data.get("quick_wins", [])]
-    strategic_moves = [Recommendation(**r) for r in data.get("strategic_moves", [])]
+    # Every counted pattern, keyed by its own text, so the model's attribution
+    # can be resolved to a real frequency instead of a written-out one.
+    counted: dict[str, tuple[int, str]] = {}
+    for kp in competitor_analysis.keyword_patterns:
+        counted[kp.keyword.strip().casefold()] = (kp.frequency, f"use '{kp.keyword}'")
+    for cp in competitor_analysis.claim_patterns:
+        counted[cp.claim.strip().casefold()] = (cp.frequency, f"make the claim '{cp.claim}'")
+    for ts in competitor_analysis.trust_signals:
+        sig = str(ts.get("signal", "")).strip()
+        if sig:
+            counted[sig.casefold()] = (int(ts.get("frequency", 0)), f"show '{sig}'")
+
+    def _evidence(pattern: str) -> str:
+        """
+        Turn the model's attribution into a counted sentence, or nothing.
+
+        A pattern the model names but Python never counted produces no evidence
+        at all. Silence is correct here: an unverifiable claim quoted to a
+        customer as market evidence is worse than no claim.
+        """
+        hit = counted.get((pattern or "").strip().casefold())
+        if not hit or hit[0] <= 0 or n_competitors <= 0:
+            return ""
+        freq, phrase = hit
+        return f"{freq} of {n_competitors} analysed competitors {phrase}"
+
+    def _to_domain(r) -> Recommendation:
+        return Recommendation(
+            priority=r.priority,
+            dimension=r.dimension,
+            current_score=clamp(r.current_score, 0.0, 10.0),
+            projected_score=clamp(r.projected_score, 0.0, 10.0),
+            impact=r.impact,
+            specific_copy=r.specific_copy,
+            competitive_evidence=_evidence(r.evidence_pattern),
+            expected_lift=r.expected_lift,
+        )
 
     return RecommendationResult(
-        recommendations=recommendations,
-        quick_wins=quick_wins,
-        strategic_moves=strategic_moves,
+        recommendations=[_to_domain(r) for r in out.recommendations],
+        quick_wins=[_to_domain(r) for r in out.quick_wins],
+        strategic_moves=[_to_domain(r) for r in out.strategic_moves],
     )
 
 

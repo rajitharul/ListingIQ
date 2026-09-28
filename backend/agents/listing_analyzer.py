@@ -5,17 +5,16 @@ extracting what's present, what's missing, and how completely each dimension is 
 """
 from __future__ import annotations
 
-import json
 import logging
 import time
-from config import OPENAI_MODEL
 from models.schemas import (
     ParsedListing,
     ScoringRubric,
     ListingAnalysis,
     DimensionExtraction,
 )
-from agents.llm_client import logged_chat_completion
+from models.llm_responses import ListingAnalysisOut, clamp
+from agents.llm_client import structured_completion
 
 log = logging.getLogger("listingiq.agent.listing_analyzer")
 
@@ -58,40 +57,27 @@ For EACH dimension, determine:
    - 0.8 = well covered
    - 1.0 = thoroughly and comprehensively covered
 
-Return a JSON object:
-{{
-  "dimensions": [
-    {{
-      "dimension_name": "Form Specificity",
-      "present": true,
-      "extracted_value": "States 'Magnesium Glycinate' in title",
-      "evidence": "Magnesium Glycinate 200mg",
-      "completeness": 0.4
-    }}
-  ]
-}}
+Return one entry per dimension listed above, in the same order.
+Be strict and honest. If the listing does NOT mention something, mark it as not present. Do not infer information that isn't explicitly stated."""
 
-Be strict and honest. If the listing does NOT mention something, mark it as not present. Do not infer information that isn't explicitly stated.
-Return ONLY valid JSON."""
-
-    response = await logged_chat_completion(
-        model=OPENAI_MODEL,
+    out = await structured_completion(
+        response_model=ListingAnalysisOut,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.1,
-        response_format={"type": "json_object"},
+        max_completion_tokens=4000,
         caller="listing_analyzer.analyze",
     )
-    data = json.loads(response.choices[0].message.content)
 
-    extractions = []
-    for item in data.get("dimensions", []):
-        extractions.append(DimensionExtraction(
-            dimension_name=item.get("dimension_name", ""),
-            present=item.get("present", False),
-            extracted_value=item.get("extracted_value", ""),
-            evidence=item.get("evidence", ""),
-            completeness=item.get("completeness", 0.0),
-        ))
+    extractions = [
+        DimensionExtraction(
+            dimension_name=item.dimension_name,
+            present=item.present,
+            extracted_value=item.extracted_value,
+            evidence=item.evidence,
+            completeness=clamp(item.completeness, 0.0, 1.0),
+        )
+        for item in out.dimensions
+    ]
 
     present = [e.dimension_name for e in extractions if e.present]
     missing = [e.dimension_name for e in extractions if not e.present]

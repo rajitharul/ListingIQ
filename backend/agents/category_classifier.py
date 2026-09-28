@@ -5,12 +5,11 @@ and loads the corresponding scoring rubric.
 """
 from __future__ import annotations
 
-import json
 import logging
 import time
-from config import OPENAI_MODEL
 from models.schemas import ParsedListing, CategoryClassification, ScoringRubric, RubricDimension
-from agents.llm_client import logged_chat_completion
+from models.llm_responses import CategoryClassificationOut, GeneratedRubricOut, clamp
+from agents.llm_client import structured_completion
 
 log = logging.getLogger("listingiq.agent.category_classifier")
 
@@ -46,32 +45,22 @@ TASK: Classify this product into:
 4. confidence — how confident you are in this classification (0.0 to 1.0)
 5. reasoning — brief explanation of why you chose this classification
 
-Return a JSON object:
-{{
-  "vertical": "...",
-  "category": "...",
-  "subcategory": "...",
-  "confidence": 0.95,
-  "reasoning": "..."
-}}
+Set confidence between 0.0 and 1.0."""
 
-Return ONLY valid JSON."""
-
-    response = await logged_chat_completion(
-        model=OPENAI_MODEL,
+    out = await structured_completion(
+        response_model=CategoryClassificationOut,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.1,
-        response_format={"type": "json_object"},
+        max_completion_tokens=1000,
         caller="category_classifier.classify",
     )
-    data = json.loads(response.choices[0].message.content)
 
     classification = CategoryClassification(
-        vertical=data.get("vertical", "General"),
-        category=data.get("category", "General"),
-        subcategory=data.get("subcategory", "General Product"),
-        confidence=data.get("confidence", 0.5),
-        reasoning=data.get("reasoning", ""),
+        vertical=out.vertical,
+        category=out.category,
+        subcategory=out.subcategory,
+        confidence=clamp(out.confidence, 0.0, 1.0),
+        reasoning=out.reasoning,
     )
 
     # Try to load a pre-built rubric
@@ -111,37 +100,29 @@ Generate 8-10 scoring dimensions specifically tailored to what matters for listi
 - description: What this dimension measures and why it matters for this product type
 - scoring_criteria: How to score 0-10 with specific examples at 0, 5, and 10
 
-Think about what information buyers need to make a purchase decision for this specific product type.
+Think about what information buyers need to make a purchase decision for this specific product type."""
 
-Return a JSON object:
-{{
-  "dimensions": [
-    {{
-      "name": "...",
-      "weight": 0.12,
-      "description": "...",
-      "scoring_criteria": "0: ... 5: ... 10: ..."
-    }}
-  ]
-}}
-
-Return ONLY valid JSON."""
-
-    response = await logged_chat_completion(
-        model=OPENAI_MODEL,
+    out = await structured_completion(
+        response_model=GeneratedRubricOut,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
-        response_format={"type": "json_object"},
+        max_completion_tokens=4000,
         caller="category_classifier.generate_rubric",
     )
-    data = json.loads(response.choices[0].message.content)
 
-    dims = data.get("dimensions", [])
-    if not dims:
+    if not out.dimensions:
         log.warning("LLM generated empty rubric — using generic fallback")
         return get_generic_rubric(classification.subcategory)
 
-    dimensions = [RubricDimension(**d) for d in dims]
+    dimensions = [
+        RubricDimension(
+            name=d.name,
+            weight=clamp(d.weight, 0.0, 1.0),
+            description=d.description,
+            scoring_criteria=d.scoring_criteria,
+        )
+        for d in out.dimensions
+    ]
     log.info("Generated %d-dimension rubric for '%s'", len(dimensions), classification.subcategory)
 
     return ScoringRubric(

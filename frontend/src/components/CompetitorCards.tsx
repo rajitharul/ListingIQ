@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { CompetitorScoutResult, CompetitorListing } from "@/types";
+import DataProvenance from "@/components/DataProvenance";
+import { platformLabel, type CompetitorScoutResult, type CompetitorListing } from "@/types";
 
 interface Props {
   data: CompetitorScoutResult;
@@ -22,15 +23,13 @@ export default function CompetitorCards({ data }: Props) {
 
   return (
     <div className="glass-card p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex items-start justify-between mb-6 gap-4">
+        <div className="min-w-0">
           <h2 className="text-lg font-semibold">Competitive Landscape</h2>
-          <p className="text-sm text-[var(--text-muted)] mt-1">
-            {data.listings.length} competitor listings &middot; {data.platform} &middot;{" "}
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)]">
-              {data.data_source}
-            </span>
+          <p className="text-sm text-[var(--text-muted)] mt-1 mb-2">
+            {data.listings.length} competitor listings &middot; benchmarked for {platformLabel(data.platform)}
           </p>
+          <DataProvenance data={data} />
         </div>
         {data.listings.length > 6 && (
           <button
@@ -57,22 +56,66 @@ export default function CompetitorCards({ data }: Props) {
                   {comp.brand_name}
                 </span>
               </div>
-              {comp.price && (
+              {comp.price ? (
                 <span className="text-sm font-bold">{comp.price}</span>
+              ) : (
+                <span className="text-[10px] text-[var(--text-muted)]">no price shown</span>
               )}
             </div>
 
-            <h3 className="text-sm font-medium line-clamp-2 mb-2">
-              {comp.title}
-            </h3>
+            {comp.url ? (
+              <a
+                href={comp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-sm font-medium line-clamp-2 mb-2 hover:text-[var(--accent)] transition-colors"
+                title="Open this competitor's listing"
+              >
+                {comp.title}
+              </a>
+            ) : (
+              <h3 className="text-sm font-medium line-clamp-2 mb-2">{comp.title}</h3>
+            )}
 
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-amber-500 text-xs">{renderStars(comp.rating)}</span>
-              <span className="text-xs font-medium">{comp.rating.toFixed(1)}</span>
-              <span className="text-[10px] text-[var(--text-muted)]">
-                ({comp.review_count.toLocaleString()} reviews)
-              </span>
+            {/* Where this competitor was found. A set can span storefronts now,
+                so the platform belongs on the card, not just in the header. */}
+            <div className="flex flex-wrap items-center gap-1.5 mb-2">
+              {comp.platform && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--card-border)]/60 text-[var(--text-muted)]">
+                  {platformLabel(comp.platform)}
+                </span>
+              )}
+              {comp.domain && comp.domain !== comp.platform && (
+                <span className="text-[10px] text-[var(--text-muted)]">{comp.domain}</span>
+              )}
+              {comp.counts_toward_benchmark === false && (
+                <span
+                  className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700"
+                  title={comp.extraction_note || "This page could not be read in full"}
+                >
+                  not scored
+                </span>
+              )}
             </div>
+
+            {/* A rating we never saw is not a rating of zero. Web-discovered
+                competitors carry no rating at all, and rendering 0.0 stars
+                would present an absence of data as a fact about the seller. */}
+            {comp.rating > 0 ? (
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-amber-500 text-xs">{renderStars(comp.rating)}</span>
+                <span className="text-xs font-medium">{comp.rating.toFixed(1)}</span>
+                {comp.review_count > 0 && (
+                  <span className="text-[10px] text-[var(--text-muted)]">
+                    ({comp.review_count.toLocaleString()} reviews)
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div className="mb-3 text-[10px] text-[var(--text-muted)]">
+                no published rating
+              </div>
+            )}
 
             {comp.badges.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-3">

@@ -59,16 +59,44 @@ function VariantCard({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Show the MEASURED score where we have one. The generator's own
+              projection is shown alongside, struck through when the two
+              disagree, so an optimistic projection is visible rather than
+              silently presented as a result. */}
           <div className="text-right">
             <div
               className="text-lg font-black"
-              style={{ color: getScoreColor(variant.expected_score) }}
+              style={{
+                color: getScoreColor(
+                  variant.is_verified ? variant.measured_score : variant.expected_score,
+                ),
+              }}
             >
-              {variant.expected_score.toFixed(1)}
+              {(variant.is_verified
+                ? variant.measured_score
+                : variant.expected_score
+              ).toFixed(1)}
             </div>
             <div className="text-[10px] text-[var(--text-muted)]">
               from {originalScore.toFixed(1)}
             </div>
+            {variant.is_verified ? (
+              <div className="text-[10px] text-emerald-700 mt-0.5" title="Re-scored through the same scorer used on the competitors">
+                ✓ measured
+                {Math.abs(variant.expected_score - variant.measured_score) >= 0.1 && (
+                  <span
+                    className="text-[var(--text-muted)] ml-1"
+                    title="What the generator predicted before it was checked"
+                  >
+                    (predicted {variant.expected_score.toFixed(1)})
+                  </span>
+                )}
+              </div>
+            ) : (
+              <div className="text-[10px] text-amber-700 mt-0.5" title="Not re-scored — this is the generator's own estimate">
+                estimated
+              </div>
+            )}
           </div>
           <CopyButton text={fullText} />
         </div>
@@ -164,6 +192,18 @@ export default function RewritePanel({
               {rewrites.best_variant_score.toFixed(1)}
             </span>{" "}
             (from {rewrites.original_score.toFixed(1)})
+          </p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">
+            {rewrites.scores_verified ? (
+              <>
+                Scores are <strong>measured</strong> — each variant was re-scored
+                through the same scorer used on the competitors, not self-reported.
+              </>
+            ) : (
+              <span className="text-amber-700">
+                Scores are the generator&rsquo;s own estimates and have not been verified.
+              </span>
+            )}
           </p>
         </div>
       </div>

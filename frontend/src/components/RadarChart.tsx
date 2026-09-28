@@ -21,7 +21,7 @@ export default function RadarChartComponent({ scores }: Props) {
       ? dim.dimension.slice(0, 16) + "..."
       : dim.dimension,
     "Your Listing": dim.score,
-    "Top 10 Avg": dim.competitor_avg,
+    "Competitor avg": dim.competitor_avg,
     Benchmark: 10,
   }));
 
@@ -51,8 +51,8 @@ export default function RadarChartComponent({ scores }: Props) {
               strokeWidth={2.5}
             />
             <Radar
-              name="Top 10 Avg"
-              dataKey="Top 10 Avg"
+              name="Competitor avg"
+              dataKey="Competitor avg"
               stroke="#2563eb"
               fill="#2563eb"
               fillOpacity={0.05}

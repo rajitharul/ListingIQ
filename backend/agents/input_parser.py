@@ -5,14 +5,36 @@ dosage, claims, format), and detects platform.
 """
 from __future__ import annotations
 
-import json
 import logging
 import time
-from config import OPENAI_MODEL
+from providers import platforms
 from models.schemas import ListingInput, ParsedListing, ExtractedEntities
-from agents.llm_client import logged_chat_completion
+from models.llm_responses import ExtractedEntitiesOut
+from agents.llm_client import structured_completion
 
 log = logging.getLogger("listingiq.agent.input_parser")
+
+
+def resolve_platform(listing_input: ListingInput) -> str:
+    """
+    Turn "auto" into a real platform before anything downstream reads it.
+
+    `/api/extract` resolves it when the user pastes a URL, but a listing
+    submitted with the selector left on "auto" carried that string all the way
+    into the pipeline — where `canonical("auto")` is `"generic"`, so the
+    same-platform cohort matched nothing and the thin-cohort fallback fired on
+    every run regardless of what was found. The report even displayed the
+    platform as "auto".
+
+    An explicit choice always wins. Otherwise the listing's own URL decides,
+    and with no URL there is genuinely nothing to detect.
+    """
+    chosen = (listing_input.platform or "").strip().lower()
+    if chosen and chosen != "auto":
+        return chosen
+    if listing_input.listing_url:
+        return platforms.detect(listing_input.listing_url)
+    return "generic"
 
 
 async def parse_listing(listing_input: ListingInput) -> ParsedListing:
@@ -43,37 +65,24 @@ Extract the following entities from the listing:
 6. claims: List of health, benefit, or performance claims made
 7. format_type: Product format (capsules, powder, serum, cream, tablets, softgels, gummies, etc.)
 
-Return a JSON object:
-{{
-  "product_type": "...",
-  "ingredients": ["..."],
-  "certifications": ["..."],
-  "dosage_info": "...",
-  "target_audience": "...",
-  "claims": ["..."],
-  "format_type": "..."
-}}
+Be thorough — extract EVERY ingredient, certification, and claim mentioned anywhere in the listing."""
 
-Be thorough — extract EVERY ingredient, certification, and claim mentioned anywhere in the listing.
-Return ONLY valid JSON."""
-
-    response = await logged_chat_completion(
-        model=OPENAI_MODEL,
+    out = await structured_completion(
+        response_model=ExtractedEntitiesOut,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.1,
-        response_format={"type": "json_object"},
+        max_completion_tokens=2000,
         caller="input_parser.parse",
     )
-    data = json.loads(response.choices[0].message.content)
 
     entities = ExtractedEntities(
-        product_type=data.get("product_type", ""),
-        ingredients=data.get("ingredients", []),
-        certifications=data.get("certifications", []),
-        dosage_info=data.get("dosage_info", ""),
-        target_audience=data.get("target_audience", listing_input.target_audience),
-        claims=data.get("claims", []),
-        format_type=data.get("format_type", ""),
+        product_type=out.product_type,
+        ingredients=out.ingredients,
+        certifications=out.certifications,
+        dosage_info=out.dosage_info,
+        target_audience=out.target_audience or listing_input.target_audience,
+        claims=out.claims,
+        format_type=out.format_type,
     )
 
     return ParsedListing(
@@ -81,7 +90,7 @@ Return ONLY valid JSON."""
         original_description=listing_input.product_description,
         original_bullets=listing_input.bullet_points,
         brand_name=listing_input.brand_name,
-        platform=listing_input.platform,
+        platform=resolve_platform(listing_input),
         extracted_entities=entities,
     )
 

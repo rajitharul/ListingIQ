@@ -49,10 +49,21 @@ def resolve_subcategory(query: str) -> str | None:
     aliases = index.get("aliases", {})
     if normalized in aliases:
         return aliases[normalized]
-    # Partial match on subcategory names
-    for subcat in index["subcategories"]:
-        if normalized in subcat.lower():
-            return subcat
+    # Partial match on subcategory names, in both directions. The classifier
+    # names a product in its own words, which may be shorter than the canonical
+    # name ("creatine") or longer ("Creatine Monohydrate Powder"). Testing
+    # containment only one way silently dropped the longer form to the generic
+    # rubric, so a listing with a real rubric was scored on generic dimensions.
+    # Longest canonical name wins, so "Vitamin D3 + K2" beats a shorter partial
+    # when a query contains both and the result does not depend on dict order.
+    # Guarded: every string contains "", so an empty or near-empty query would
+    # otherwise match every rubric and return the longest one.
+    if len(normalized) < 3:
+        return None
+    matches = [s for s in index["subcategories"]
+               if normalized in s.lower() or s.lower() in normalized]
+    if matches:
+        return max(matches, key=len)
     return None
 
 

@@ -1,0 +1,209 @@
+{
+  "_comment": "Eval set for score stability and tier discrimination. `tier` is the human judgement of listing quality and is what discrimination is measured against — a scorer that cannot rank strong above weak is broken regardless of how stable it is. `expected_subcategory` must match a key in data/rubrics/_index.json.",
+  "listings": [
+    {
+      "id": "weak-magnesium",
+      "tier": "weak",
+      "expected_subcategory": "Magnesium Glycinate",
+      "listing": {
+        "product_title": "Magnesium 500mg 120 Capsules",
+        "product_description": "Magnesium supplement capsules. Take daily for health support.",
+        "bullet_points": ["500mg per capsule", "120 capsules per bottle", "Easy to swallow"],
+        "brand_name": "HealthPlus",
+        "platform": "amazon",
+        "target_audience": ""
+      }
+    },
+    {
+      "id": "weak-collagen",
+      "tier": "weak",
+      "expected_subcategory": "Collagen Peptides",
+      "listing": {
+        "product_title": "Collagen Powder 300g",
+        "product_description": "Collagen powder for skin and joints.",
+        "bullet_points": ["300g tub", "Mix with water", "Unflavoured"],
+        "brand_name": "PureLine",
+        "platform": "amazon",
+        "target_audience": ""
+      }
+    },
+    {
+      "id": "moderate-creatine",
+      "tier": "moderate",
+      "expected_subcategory": "Creatine Monohydrate",
+      "listing": {
+        "product_title": "Creatine Monohydrate Powder 5000mg - Micronized Unflavored 300g (60 Servings)",
+        "product_description": "Pure micronized creatine monohydrate powder supporting muscle strength, power output and recovery. Unflavoured and mixes easily into water, juice or your usual shake.",
+        "bullet_points": [
+          "5g pure creatine monohydrate per serving, no fillers or additives",
+          "60 servings per 300g tub",
+          "Third-party tested for purity and banned substances",
+          "Micronized for easier mixing and reduced grit",
+          "Unflavoured so it works in any drink"
+        ],
+        "brand_name": "NutriForce",
+        "platform": "amazon",
+        "target_audience": "athletes and gym-goers"
+      }
+    },
+    {
+      "id": "moderate-probiotic",
+      "tier": "moderate",
+      "expected_subcategory": "Probiotic Capsules",
+      "listing": {
+        "product_title": "Probiotics 50 Billion CFU - 60 Vegetarian Capsules with Prebiotic Blend",
+        "product_description": "A daily probiotic supplement with 50 billion CFU and a prebiotic blend to support digestive balance and immune health.",
+        "bullet_points": [
+          "50 billion CFU per capsule from 10 probiotic strains",
+          "Includes a prebiotic blend to support the cultures",
+          "Shelf stable, no refrigeration needed",
+          "60 vegetarian capsules, a two month supply",
+          "Made in a GMP certified facility"
+        ],
+        "brand_name": "GutWell",
+        "platform": "amazon",
+        "target_audience": "adults with digestive concerns"
+      }
+    },
+    {
+      "id": "strong-vitamin-d3-k2",
+      "tier": "strong",
+      "expected_subcategory": "Vitamin D3 + K2",
+      "listing": {
+        "product_title": "Vitamin D3 5000 IU with K2 MK-7 100mcg - 120 Softgels with Organic Olive Oil for Absorption",
+        "product_description": "Vitamin D3 and K2 work as a pair: D3 raises calcium absorption, and K2 as MK-7 directs that calcium into bone rather than soft tissue. Taking D3 without K2 is why many people supplementing at higher doses see limited benefit. Each softgel delivers 5000 IU of cholecalciferol D3 alongside 100mcg of MK-7 sourced from natural fermentation, suspended in organic olive oil because both vitamins are fat soluble and absorb substantially better with a lipid carrier than in dry tablet form. Third-party tested by an ISO 17025 accredited lab, with a certificate of analysis available for every batch.",
+        "bullet_points": [
+          "SYNERGISTIC PAIR - 5000 IU D3 with 100mcg K2 MK-7. D3 absorbs calcium, K2 directs it to bone instead of arteries. The two are far more effective together than either alone.",
+          "MK-7 FORM, NOT MK-4 - MK-7 has a 72-hour half-life versus roughly 8 hours for MK-4, so one daily softgel maintains steady blood levels. Sourced from natural fermentation.",
+          "SUSPENDED IN ORGANIC OLIVE OIL - Both vitamins are fat soluble. Dry tablets absorb poorly on an empty stomach; the olive oil carrier solves this.",
+          "THIRD-PARTY TESTED - Every batch verified by an ISO 17025 accredited lab for potency, heavy metals and microbials. Certificate of analysis available by batch number.",
+          "120 SOFTGELS, 4 MONTH SUPPLY - Non-GMO, soy free, gluten free. Made in a cGMP certified facility in the USA."
+        ],
+        "brand_name": "Meridian Labs",
+        "platform": "amazon",
+        "target_audience": "adults 30+ supporting bone density and cardiovascular health"
+      }
+    },
+    {
+      "id": "strong-magnesium",
+      "tier": "strong",
+      "expected_subcategory": "Magnesium Glycinate",
+      "listing": {
+        "product_title": "Magnesium Glycinate 400mg Elemental - 180 Capsules, Chelated for Absorption, Third-Party Tested",
+        "product_description": "Magnesium glycinate is magnesium bound to the amino acid glycine. That chelated form is absorbed roughly twice as efficiently as magnesium oxide and does not draw water into the bowel, which is why oxide causes the digestive upset that stops most people from continuing. Each serving provides 400mg of elemental magnesium, not 400mg of the compound, a distinction many labels blur. Glycine itself is mildly calming, which is why this form is the one typically studied for sleep quality and stress. Third-party tested for heavy metals and potency with a certificate of analysis published for each batch.",
+        "bullet_points": [
+          "400MG ELEMENTAL MAGNESIUM - Not 400mg of compound. Many brands list total compound weight, which can mean under 100mg of usable magnesium per serving. Read the label carefully.",
+          "CHELATED GLYCINATE FORM - Bound to glycine for roughly 2x the absorption of magnesium oxide, with none of the laxative effect that makes oxide hard to tolerate at therapeutic doses.",
+          "FORMULATED FOR SLEEP AND STRESS - Glycine is mildly calming on its own. This is the form used in most sleep quality research, not citrate or oxide.",
+          "THIRD-PARTY TESTED - Heavy metals, potency and microbial testing on every batch by an independent ISO 17025 lab. Certificate of analysis available on request.",
+          "180 CAPSULES, 3 MONTH SUPPLY - Vegan, non-GMO, no magnesium stearate or artificial fillers. Made in a cGMP certified US facility."
+        ],
+        "brand_name": "Meridian Labs",
+        "platform": "amazon",
+        "target_audience": "adults supporting sleep quality, muscle recovery and stress"
+      }
+    },
+    {
+      "id": "weak-vitamin-c",
+      "tier": "weak",
+      "expected_subcategory": "Vitamin C Serum",
+      "listing": {
+        "product_title": "Vitamin C Serum for Face Anti Aging 30ml",
+        "product_description": "Face serum with vitamin C. Helps with anti aging and skin brightening.",
+        "bullet_points": ["Anti aging formula", "30ml bottle", "For all skin types"],
+        "brand_name": "GlowSkin",
+        "platform": "amazon",
+        "target_audience": ""
+      }
+    },
+    {
+      "id": "weak-sunscreen",
+      "tier": "weak",
+      "expected_subcategory": "Sunscreen SPF 50",
+      "listing": {
+        "product_title": "Sunscreen SPF 50 Face Cream 50ml",
+        "product_description": "Sunscreen for face. SPF 50 protection.",
+        "bullet_points": ["SPF 50", "50ml", "Water resistant"],
+        "brand_name": "SunCare",
+        "platform": "amazon",
+        "target_audience": ""
+      }
+    },
+    {
+      "id": "moderate-retinol",
+      "tier": "moderate",
+      "expected_subcategory": "Retinol Serum",
+      "listing": {
+        "product_title": "Retinol Serum 0.5% with Hyaluronic Acid and Vitamin E - 30ml Anti-Aging Face Serum",
+        "product_description": "A 0.5% retinol serum formulated with hyaluronic acid and vitamin E to support skin renewal while limiting dryness. Suitable for nightly use once skin has adjusted.",
+        "bullet_points": [
+          "0.5% retinol concentration, a good starting strength for most skin",
+          "Buffered with hyaluronic acid and vitamin E to reduce dryness",
+          "Supports fine lines, uneven texture and visible pores",
+          "Use at night, start two or three times weekly and build up",
+          "30ml airless pump bottle, cruelty free"
+        ],
+        "brand_name": "Lumen",
+        "platform": "amazon",
+        "target_audience": "adults new to retinol"
+      }
+    },
+    {
+      "id": "moderate-niacinamide",
+      "tier": "moderate",
+      "expected_subcategory": "Niacinamide Serum",
+      "listing": {
+        "product_title": "Niacinamide 10% + Zinc 1% Serum - 30ml for Oily Skin, Pores and Blemishes",
+        "product_description": "A 10% niacinamide serum with 1% zinc PCA, formulated to reduce the look of enlarged pores and support a more balanced complexion on oily and combination skin.",
+        "bullet_points": [
+          "10% niacinamide with 1% zinc PCA",
+          "Targets visible pore size, uneven tone and excess shine",
+          "Lightweight, absorbs fast, layers under moisturiser",
+          "Fragrance free and suitable for oily and combination skin",
+          "30ml dropper bottle, vegan and cruelty free"
+        ],
+        "brand_name": "Lumen",
+        "platform": "amazon",
+        "target_audience": "oily and combination skin"
+      }
+    },
+    {
+      "id": "strong-vitamin-c",
+      "tier": "strong",
+      "expected_subcategory": "Vitamin C Serum",
+      "listing": {
+        "product_title": "Vitamin C Serum 15% L-Ascorbic Acid with Vitamin E and Ferulic Acid - 30ml Amber Glass, pH 3.2",
+        "product_description": "This serum uses 15% L-ascorbic acid, the only form of vitamin C with substantial clinical evidence behind it, at pH 3.2 where it stays stable and penetrates. It is paired with 1% vitamin E and 0.5% ferulic acid in the ratio shown in dermatology research to roughly double photoprotection and extend the antioxidant's stability. L-ascorbic acid oxidises on exposure to light and air, so it ships in amber glass with an airless pump rather than a clear dropper bottle. A faint yellow tint is normal; discard if it turns deep orange.",
+        "bullet_points": [
+          "15% L-ASCORBIC ACID AT pH 3.2 - The pure form used in clinical studies, not a gentler derivative like sodium ascorbyl phosphate. pH below 3.5 is required for it to penetrate.",
+          "THE FERULIC ACID TRIO - 15% L-ascorbic acid with 1% vitamin E and 0.5% ferulic acid, the combination shown in dermatology research to approximately double photoprotection and slow oxidation.",
+          "AMBER GLASS, AIRLESS PUMP - Vitamin C degrades in light and air. Clear dropper bottles let it oxidise within weeks. This packaging is a formulation decision, not a cosmetic one.",
+          "TARGETS DARK SPOTS AND DULLNESS - Supports a brighter, more even tone over 8 to 12 weeks of daily morning use under sunscreen.",
+          "30ML, FRAGRANCE FREE - No added fragrance or essential oils. Vegan, cruelty free, and patch testing is recommended for sensitive skin."
+        ],
+        "brand_name": "Aureus Skin",
+        "platform": "amazon",
+        "target_audience": "adults targeting dark spots, dullness and early signs of ageing"
+      }
+    },
+    {
+      "id": "strong-hyaluronic",
+      "tier": "strong",
+      "expected_subcategory": "Hyaluronic Acid Serum",
+      "listing": {
+        "product_title": "Hyaluronic Acid Serum - 5 Molecular Weights with B5 - 30ml for Multi-Depth Hydration",
+        "product_description": "Most hyaluronic acid serums use a single high molecular weight that sits on the surface and can feel tight as it dries. This uses five weights from 2,000 to 1,500,000 daltons so hydration is delivered at several depths rather than only the top layer. Vitamin B5 is included to help hold that water in place. Apply to damp skin and seal with a moisturiser; in a dry climate, hyaluronic acid applied to dry skin can draw moisture outward rather than in, which is the most common reason people find it does not work for them.",
+        "bullet_points": [
+          "FIVE MOLECULAR WEIGHTS - From 2,000 to 1,500,000 daltons. Low weights reach deeper layers, high weights hold surface moisture. Single-weight serums only do one of those.",
+          "VITAMIN B5 INCLUDED - Panthenol supports the skin barrier and helps retain the water the hyaluronic acid attracts.",
+          "APPLY TO DAMP SKIN - Then seal with moisturiser. On dry skin in low humidity it can pull moisture from the skin rather than into it. This instruction matters more than the formula.",
+          "LAYERS WITH ANYTHING - No acids, fragrance or actives that conflict. Safe alongside retinol, vitamin C and niacinamide, and suitable during pregnancy.",
+          "30ML, FRAGRANCE FREE - Non-comedogenic, vegan, cruelty free, suitable for all skin types including sensitive."
+        ],
+        "brand_name": "Aureus Skin",
+        "platform": "amazon",
+        "target_audience": "all skin types, including dehydrated and sensitive skin"
+      }
+    }
+  ]
+}

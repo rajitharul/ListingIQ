@@ -7,10 +7,8 @@ Generates 2-3 complete listing rewrite variants:
 """
 from __future__ import annotations
 
-import json
 import logging
 import time
-from config import OPENAI_MODEL
 from models.schemas import (
     ParsedListing,
     RecommendationResult,
@@ -19,7 +17,9 @@ from models.schemas import (
     ListingRewrite,
     RewriteResult,
 )
-from agents.llm_client import logged_chat_completion
+from models.llm_responses import RewriteResultOut, clamp
+from agents.llm_client import structured_completion
+from providers import platforms
 
 log = logging.getLogger("listingiq.agent.rewrite_generator")
 
@@ -31,6 +31,12 @@ async def generate_rewrites(
     scores: ListingScore,
 ) -> RewriteResult:
     """Generate 3 complete listing rewrite variants."""
+
+    # The rewrite has to be shaped for the platform it will be published on. A
+    # 200-character keyword-stacked title is excellent on a marketplace and
+    # wrong on a brand's own product page; the reverse is equally true. This was
+    # previously hardcoded to Amazon in the prompt.
+    profile = platforms.profile(parsed_listing.platform)
 
     # Current listing
     bullets_text = "\n".join(f"  - {b}" for b in parsed_listing.original_bullets) if parsed_listing.original_bullets else "  (no bullets)"
@@ -68,37 +74,27 @@ COMPETITIVE INTELLIGENCE:
   Trust signals: {', '.join(trust_list)}
   Structural patterns: avg title ~{competitor_analysis.structural_patterns.get('avg_title_length', 100)} chars, avg {competitor_analysis.structural_patterns.get('avg_bullet_count', 5)} bullets
 
+PLATFORM: {profile.label}
+  Titles here run roughly {profile.title_char_target[0]}-{profile.title_char_target[1]} characters.
+  {"Bullet points are a first-class field; write " + str(profile.typical_bullets) + " of them." if profile.bullets_expected else "This platform has no bullet field — selling copy is prose. Bullets are supplied for reference only."}
+  {profile.note}
+
 Generate exactly 3 variants:
 
-1. KEYWORD-OPTIMIZED: Front-load high-volume search keywords. Maximize search visibility. Structure title for Amazon SEO (brand + key feature + product type + size/count). Every bullet should contain a search term.
+1. KEYWORD-OPTIMIZED: Front-load high-volume search keywords. Maximize search visibility. Structure the title the way this platform's search rewards (brand + key feature + product type + size/count). Every bullet should contain a search term.
 
-2. BENEFIT-LED: Lead with strongest outcome claims and benefits. Focus on what the product DOES for the buyer. Emotional/aspirational language. Best for Shopify/DTC contexts.
+2. BENEFIT-LED: Lead with strongest outcome claims and benefits. Focus on what the product DOES for the buyer. Emotional/aspirational language.
 
 3. TRUST-FORWARD: Lead with certifications, testing, and social proof. Build credibility before benefits. Best for categories where trust is the primary purchase barrier (supplements, skincare).
 
 For each variant, provide:
 - variant_name: "keyword-optimized", "benefit-led", or "trust-forward"
 - strategy: 1-sentence description of the approach
-- title: Complete product title (match competitive title length)
+- title: Complete product title, within this platform's length norm
 - bullet_points: 5-6 bullet points (each 1-2 lines)
 - description: 2-3 paragraph product description
 - expected_score: Projected overall score (0-10)
 - key_changes: List of 3-5 specific changes from the original
-
-Return a JSON object:
-{{
-  "variants": [
-    {{
-      "variant_name": "keyword-optimized",
-      "strategy": "...",
-      "title": "...",
-      "bullet_points": ["...", "..."],
-      "description": "...",
-      "expected_score": 7.5,
-      "key_changes": ["Added form specificity to title", "..."]
-    }}
-  ]
-}}
 
 RULES:
 - Keep the brand name in all titles
@@ -106,19 +102,29 @@ RULES:
 - Description should be prose, not bullets
 - Be specific and authentic — no generic marketing fluff
 - Each variant should feel distinctly different in approach
+- variant_name must be exactly one of: keyword-optimized, benefit-led, trust-forward
+- expected_score runs from 0.0 to 10.0"""
 
-Return ONLY valid JSON."""
-
-    response = await logged_chat_completion(
-        model=OPENAI_MODEL,
+    out = await structured_completion(
+        response_model=RewriteResultOut,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.5,
-        response_format={"type": "json_object"},
+        max_completion_tokens=8000,
         caller="rewrite_generator.generate",
     )
-    data = json.loads(response.choices[0].message.content)
 
-    variants = [ListingRewrite(**v) for v in data.get("variants", [])]
+    variants = [
+        ListingRewrite(
+            variant_name=v.variant_name,
+            strategy=v.strategy,
+            title=v.title,
+            bullet_points=v.bullet_points,
+            description=v.description,
+            expected_score=clamp(v.expected_score, 0.0, 10.0),
+            key_changes=v.key_changes,
+        )
+        for v in out.variants
+    ]
 
     best_score = max((v.expected_score for v in variants), default=0.0)
 

@@ -5,11 +5,10 @@ This is the merge point where both parallel branches converge.
 """
 from __future__ import annotations
 
-import json
 import logging
 import time
-from config import OPENAI_MODEL
 from models.schemas import (
+    CompetitorBenchmark,
     ListingAnalysis,
     CompetitorAnalysis,
     ScoringRubric,
@@ -17,7 +16,8 @@ from models.schemas import (
     DimensionScore,
     ParsedListing,
 )
-from agents.llm_client import logged_chat_completion
+from models.llm_responses import BenchmarkScoreOut, clamp
+from agents.llm_client import structured_completion
 
 log = logging.getLogger("listingiq.agent.benchmark_scorer")
 
@@ -27,8 +27,22 @@ async def score_listing(
     competitor_analysis: CompetitorAnalysis,
     rubric: ScoringRubric,
     parsed_listing: ParsedListing,
+    benchmark: CompetitorBenchmark,
+    *,
+    wide_benchmark: CompetitorBenchmark | None = None,
 ) -> ListingScore:
-    """Score the user's listing per dimension against the competitor benchmark."""
+    """
+    Score the user's listing per dimension against the competitor benchmark.
+
+    `benchmark` is the headline cohort — same-platform where enough competitors
+    were found there, the whole category otherwise. `wide_benchmark` is every
+    competitor found, and produces a second percentile shown alongside: "top
+    18% of Amazon sellers, top 31% of the category" says something neither
+    number says alone.
+
+    Keyword-only with a default, so existing five-argument callers are
+    unaffected.
+    """
 
     # Build dimension extraction summary
     dim_extractions = ""
@@ -36,17 +50,25 @@ async def score_listing(
         status = "PRESENT" if de.present else "MISSING"
         dim_extractions += f"\n  - {de.dimension_name} [{status}]: {de.extracted_value or 'Not addressed'} (completeness: {de.completeness})"
 
+    # The real size of the competitive set. This was hardcoded to 10 while a
+    # marketplace search always returned exactly ten results; web discovery does
+    # not, so "8/10 competitors" could describe a set of six — and the model was
+    # being asked to weigh evidence against a denominator that did not exist.
+    n_competitors = int(
+        (competitor_analysis.structural_patterns or {}).get("listings_counted") or 0
+    ) or 10
+
     # Build competitive context
     kw_context = "\n".join(
-        f"  - '{kp.keyword}' used by {kp.frequency}/10 competitors in {kp.position}"
+        f"  - '{kp.keyword}' used by {kp.frequency}/{n_competitors} competitors in {kp.position}"
         for kp in competitor_analysis.keyword_patterns[:10]
     )
     claim_context = "\n".join(
-        f"  - '{cp.claim}' made by {cp.frequency}/10 competitors"
+        f"  - '{cp.claim}' made by {cp.frequency}/{n_competitors} competitors"
         for cp in competitor_analysis.claim_patterns[:10]
     )
     trust_context = "\n".join(
-        f"  - '{ts.get('signal', '')}' in {ts.get('frequency', 0)}/10 competitors"
+        f"  - '{ts['signal']}' in {ts['frequency']}/{n_competitors} competitors"
         for ts in competitor_analysis.trust_signals[:10]
     )
 
@@ -75,52 +97,40 @@ SCORING RUBRIC:
 
 SCORING RULES:
 1. Score each dimension 0.0 to 10.0 (one decimal place)
-2. Use the scoring_criteria from the rubric as your guide
-3. Compare against the competitive benchmark — if 9/10 competitors mention something and the user doesn't, that's a significant gap
+2. Use the scoring_criteria from the rubric as your guide, applied exactly as it was applied to the competitors
+3. Judge only what the listing actually says
 4. Be discriminating — a bare-minimum listing should score 1-3, a decent listing 4-6, a good listing 7-8, excellent 9+
-5. Calculate competitor_avg: what the average top-10 competitor would score on this dimension
-6. Calculate gap: competitor_avg - user_score (positive = user is behind)
 
-Return a JSON object:
-{{
-  "dimension_scores": [
-    {{
-      "dimension": "Form Specificity",
-      "weight": 0.15,
-      "score": 3.5,
-      "explanation": "Listing states 'Magnesium Glycinate' in title but does not explain why glycinate form matters or compare to other forms.",
-      "competitor_avg": 7.2,
-      "gap": 3.7,
-      "strengths": ["Form is named in title"],
-      "weaknesses": ["No explanation of form benefits", "No comparison to other forms"]
-    }}
-  ],
-  "percentile": 25
-}}
+Do NOT estimate competitor averages, gaps or percentiles. Those are measured
+separately from the competitors' own scores; your job is this listing only.
 
-The percentile is where the user's listing would rank if inserted among the 10 competitors (0 = worst, 100 = best).
-Return ONLY valid JSON."""
+Score every dimension in the rubric above, copying each dimension's weight verbatim."""
 
-    response = await logged_chat_completion(
-        model=OPENAI_MODEL,
+    out = await structured_completion(
+        response_model=BenchmarkScoreOut,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.2,
-        response_format={"type": "json_object"},
+        max_completion_tokens=6000,
         caller="benchmark_scorer.score",
     )
-    data = json.loads(response.choices[0].message.content)
 
     dimension_scores = []
-    for ds in data.get("dimension_scores", []):
+    for ds in out.dimension_scores:
+        score = clamp(ds.score, 0.0, 10.0)
+        # Measured from the competitors' own scores on this rubric. Falls back
+        # to the user's own score only when a dimension could not be measured,
+        # which yields a zero gap rather than a fabricated one.
+        measured = benchmark.mean_for(ds.dimension)
+        competitor_avg = measured if measured is not None else score
         dimension_scores.append(DimensionScore(
-            dimension=ds.get("dimension", ""),
-            weight=ds.get("weight", 0.0),
-            score=ds.get("score", 0.0),
-            explanation=ds.get("explanation", ""),
-            competitor_avg=ds.get("competitor_avg", 0.0),
-            gap=ds.get("gap", 0.0),
-            strengths=ds.get("strengths", []),
-            weaknesses=ds.get("weaknesses", []),
+            dimension=ds.dimension,
+            weight=clamp(ds.weight, 0.0, 1.0),
+            score=score,
+            explanation=ds.explanation,
+            competitor_avg=round(competitor_avg, 2),
+            gap=round(competitor_avg - score, 2),
+            strengths=ds.strengths,
+            weaknesses=ds.weaknesses,
         ))
 
     # Calculate weighted overall score
@@ -146,11 +156,19 @@ Return ONLY valid JSON."""
         reverse=True,
     )
 
+    wide = wide_benchmark or benchmark
     return ListingScore(
         overall_score=overall_score,
         dimension_scores=dimension_scores,
-        percentile=data.get("percentile", 0),
+        # Measured: how many of the scored competitors this listing beats.
+        percentile=benchmark.percentile_for(overall_score),
         gap_analysis=gap_analysis,
+        # Which cohort that percentile describes, and how big it was. An
+        # unqualified percentile cannot be checked; "top 18% of 11" can.
+        percentile_basis=benchmark.cohort,
+        percentile_cohort_n=len(benchmark.competitors),
+        category_percentile=wide.percentile_for(overall_score),
+        category_cohort_n=len(wide.competitors),
     )
 
 
@@ -176,12 +194,27 @@ async def benchmark_scorer_node(state: dict) -> dict:
     if isinstance(parsed, dict):
         parsed = ParsedListing(**parsed)
 
-    result = await score_listing(listing_analysis, competitor_analysis, rubric, parsed)
+    benchmark = state.get("competitor_benchmark") or CompetitorBenchmark()
+    if isinstance(benchmark, dict):
+        benchmark = CompetitorBenchmark(**benchmark)
+
+    wide = state.get("competitor_benchmark_all")
+    if isinstance(wide, dict):
+        wide = CompetitorBenchmark(**wide)
+
+    result = await score_listing(
+        listing_analysis, competitor_analysis, rubric, parsed, benchmark,
+        wide_benchmark=wide)
     log.info(
-        "⚙ benchmark_scorer_node EXIT  %.1fs  overall=%.1f  percentile=%d  gaps=%d",
+        "⚙ benchmark_scorer_node EXIT  %.1fs  overall=%.1f  percentile=%d vs %s (n=%d)  "
+        "category=%d (n=%d)  gaps=%d",
         time.perf_counter() - t0,
         result.overall_score,
         result.percentile,
+        result.percentile_basis,
+        result.percentile_cohort_n,
+        result.category_percentile,
+        result.category_cohort_n,
         len(result.gap_analysis),
     )
     return {"scores": result}
